@@ -9,6 +9,7 @@ final class PreferencesForm: NSObject {
     private let lowBatteryBox = NSButton(checkboxWithTitle: L("任务模式下，电池电量低于 \(Preferences.lowBatteryThreshold)% 时提醒我", "Warn me below \(Preferences.lowBatteryThreshold)% battery in Task mode"), target: nil, action: nil)
     private let loginBox = NSButton(checkboxWithTitle: L("登录 Mac 时自动打开 PowerSwitcher", "Open PowerSwitcher when I log in"), target: nil, action: nil)
     private let lidBox = NSButton(checkboxWithTitle: L("任务模式下，合上盖子时关闭屏幕（任务继续运行）", "Turn off the display when closing the lid in Task mode"), target: nil, action: nil)
+    private let darkBox = NSButton(checkboxWithTitle: L("合盖期间保持黑屏（亮度降到 0，开盖后恢复）", "Keep the screen dark while the lid is closed"), target: nil, action: nil)
     private let hasLid = Lid.exists
     private let width: CGFloat
 
@@ -20,6 +21,23 @@ final class PreferencesForm: NSObject {
         lowBatteryBox.state = Preferences.lowBatteryWarning ? .on : .off
         loginBox.state = LoginItem.isEnabled ? .on : .off
         lidBox.state = Preferences.displayOffOnLidClose ? .on : .off
+        darkBox.state = Preferences.keepDarkOnLidClose ? .on : .off
+        lidBox.target = self
+        lidBox.action = #selector(lidChanged)
+        lidChanged()
+    }
+
+    @objc private func lidChanged() { darkBox.isEnabled = lidBox.state == .on }
+
+    /// The lid option, plus the dark-screen option indented under it when brightness control is available.
+    private func lidView() -> NSView {
+        guard Backlight.available else { return lidBox }
+        let note = UI.paragraph(L("远程控制等软件可能会在合盖后重新点亮屏幕。开启后会把内屏亮度降到 0，屏幕不发光，远程画面照常；开盖后恢复原亮度。",
+                                  "Remote-control apps may wake the screen after the lid closes. With this on, PowerSwitcher sets the built-in brightness to 0 so the panel stays dark while remote viewing keeps working, and restores it when you open the lid."),
+                                width: width - 40, size: 11)
+        let sub = UI.stack([darkBox, note], spacing: 4)
+        sub.edgeInsets = NSEdgeInsets(top: 0, left: 20, bottom: 0, right: 0)
+        return UI.stack([lidBox, sub], spacing: 6)
     }
 
     var timers: DailyTimers {
@@ -51,7 +69,7 @@ final class PreferencesForm: NSObject {
             views.append(UI.stack([UI.paragraph(L("已添加，但需要在“系统设置 › 通用 › 登录项”中允许。", "Added. Allow it in System Settings › General › Login Items."), width: width - 140, size: 11), open],
                                   spacing: 8, vertical: false))
         }
-        if hasLid { views.append(lidBox) }
+        if hasLid { views.append(lidView()) }
         if hasBattery { views.append(lowBatteryBox) }
         return UI.stack(views, spacing: 8)
     }
@@ -60,7 +78,10 @@ final class PreferencesForm: NSObject {
     func save() -> String? {
         Preferences.timers = timers
         if hasBattery { Preferences.lowBatteryWarning = lowBatteryBox.state == .on }
-        if hasLid { Preferences.displayOffOnLidClose = lidBox.state == .on }
+        if hasLid {
+            Preferences.displayOffOnLidClose = lidBox.state == .on
+            Preferences.keepDarkOnLidClose = darkBox.state == .on
+        }
         return LoginItem.set(loginBox.state == .on)
     }
 

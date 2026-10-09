@@ -48,6 +48,7 @@ enum SelfTest {
         check(!L10n.chinese(preferred: []), "empty language list falls back to English")
         check(L10n.chinese(preferred: ["en"], override: "zh") && !L10n.chinese(preferred: ["zh"], override: "en"), "manual language override")
         check(Format.minutes(15) == L("15 分钟", "15 min"), "localized time formatting")
+        print("Backlight API: " + (Backlight.available ? "available" : "unavailable (lid dimming disabled)"))
         print("UI language: " + (L10n.isChinese ? "zh" : "en"))
         print("Application: " + Bundle.main.bundleURL.path)
         return ok

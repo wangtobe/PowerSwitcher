@@ -42,6 +42,16 @@ enum Preferences {
         get { (store.object(forKey: "displayOffOnLidClose") as? Bool) ?? true }
         set { store.set(newValue, forKey: "displayOffOnLidClose") }
     }
+    /// Hold the built-in brightness at zero while the lid is shut, for apps that wake the display again.
+    static var keepDarkOnLidClose: Bool {
+        get { (store.object(forKey: "keepDarkOnLidClose") as? Bool) ?? true }
+        set { store.set(newValue, forKey: "keepDarkOnLidClose") }
+    }
+    /// Brightness to restore when the lid opens. Persisted so a relaunch after a crash can still restore it.
+    static var dimmedBrightness: Float? {
+        get { (store.object(forKey: "dimmedBrightness") as? NSNumber)?.floatValue }
+        set { if let value = newValue { store.set(value, forKey: "dimmedBrightness") } else { store.removeObject(forKey: "dimmedBrightness") } }
+    }
     static var skipSleepConfirmation: Bool {
         get { store.bool(forKey: "skipSleepConfirmation") }
         set { store.set(newValue, forKey: "skipSleepConfirmation") }

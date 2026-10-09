@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let workspace = NSWorkspace.shared.notificationCenter
         workspace.addObserver(self, selector: #selector(willSleep(_:)), name: NSWorkspace.willSleepNotification, object: nil)
         workspace.addObserver(self, selector: #selector(didWake(_:)), name: NSWorkspace.didWakeNotification, object: nil)
+        // A previous run may have quit with the lid shut and the panel dimmed.
+        if Lid.isClosed() != true { restoreBacklight() }
         render()
         readSnapshot { snapshot in
             self.snapshot = snapshot
@@ -45,6 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in self?.refresh() }
         timer?.tolerance = 5
     }
+
+    func applicationWillTerminate(_ notification: Notification) { restoreBacklight() }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if Preferences.setupCompleted { statusItem.button?.performClick(nil) } else { showSetup(nil) }
@@ -321,23 +325,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             lidActivity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep,
                                                                 reason: L("任务模式：合上盖子时关闭屏幕", "Task mode: turn off display when lid closes"))
             lidWasClosed = Lid.isClosed() ?? false
-            lidTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.checkLid() }
-            lidTimer?.tolerance = 0.5
+            lidTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.checkLid() }
+            lidTimer?.tolerance = 0.3
         } else if !active, let timer = lidTimer {
             timer.invalidate()
             lidTimer = nil
             if let activity = lidActivity { ProcessInfo.processInfo.endActivity(activity) }
             lidActivity = nil
+            restoreBacklight()
         }
     }
 
-    /// Acts once per closing, so remote control with the lid shut can still wake the screen.
+    /// Display sleep is requested once per closing. Remote-control tools (UU Remote, for example) wake the
+    /// display again right after it turns off, so when the user opts in, the backlight is also held at zero
+    /// for as long as the lid stays shut: the panel stays dark while remote viewing keeps working.
     private func checkLid() {
         guard let closed = Lid.isClosed() else { return }
         let justClosed = closed && !lidWasClosed
         lidWasClosed = closed
-        guard justClosed, !Lid.hasExternalDisplay else { return }
-        reader.async { Lid.turnDisplayOff() }
+        guard closed else { restoreBacklight(); return }
+        if Preferences.keepDarkOnLidClose { dimBacklight() } else { restoreBacklight() }
+        if justClosed, !Lid.hasExternalDisplay { reader.async { Lid.turnDisplayOff() } }
+    }
+
+    private func dimBacklight() {
+        guard let level = Backlight.level, level > 0.001 else { return }
+        if Preferences.dimmedBrightness == nil { Preferences.dimmedBrightness = level }
+        Backlight.set(0)
+    }
+
+    private func restoreBacklight() {
+        guard let saved = Preferences.dimmedBrightness else { return }
+        // Not restored yet when the panel is unavailable (still shut, or clamshell mode); keep the value for later.
+        guard let level = Backlight.level else { return }
+        if level < 0.001 { Backlight.set(saved) }
+        Preferences.dimmedBrightness = nil
     }
 
     // MARK: Sleep

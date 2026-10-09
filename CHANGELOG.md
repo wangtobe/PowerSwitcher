@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 — 2026-10-09
+
+- Fix: in Task mode the screen could stay lit with the lid closed. Display sleep was requested once per closing, and remote-control tools (seen with UU Remote) woke the display again within a second.
+- New option, on by default: "Keep the screen dark while the lid is closed". Holds the built-in brightness at 0 while the lid stays shut and restores it when the lid opens, so remote viewing keeps working with a dark panel. Uses the private DisplayServices framework; disabled automatically when unavailable.
+- The saved brightness is persisted and restored on the next launch if the app quits with the panel dimmed.
+- Lid polling interval 2 s → 1 s. Power switching, authorization, verification and rollback logic are unchanged.
+
 ## 1.5.0 — 2026-10-04
 
 - Add Chinese/English UI with automatic system-language selection and a manual override (applies on next launch).

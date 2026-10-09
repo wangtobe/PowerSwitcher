@@ -36,7 +36,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 - 点开菜单能看到当前的休眠时间、电源状态、电量，还有上次真正睡着是什么时候（PowerSwitcher 开着的时候才记录）。
 - 每次切完都会再读一遍系统设置，确认真的改好了。没改成会尝试改回原样，并告诉你哪一步出了问题。
 - 点「立即休眠」后，它会确认 Mac 有没有真的睡着，20 秒还没睡就告诉你原因。
-- 笔记本用户：任务模式下合上盖子，屏幕可能不会灭。PowerSwitcher 会在合盖时把屏幕关掉，任务照跑；接着外接显示器时不会这么做。不需要的话可以在「设置…」里关掉。
+- 笔记本用户：任务模式下合上盖子，屏幕可能不会灭。PowerSwitcher 会在合盖时把屏幕关掉，任务照跑；接着外接显示器时不会这么做。UU 远程这类远程控制软件可能会把屏幕重新点亮，所以默认还会在合盖期间把内屏亮度降到 0：屏幕不发光，远程画面照常，开盖后恢复原亮度。这两项都可以在「设置…」里关掉。
 - 第一次打开有个简单的向导，设好休眠时间就能用了。
 
 ### 1.5.0 新增
@@ -67,7 +67,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 - 没有 Apple 公证，所以第一次打开会被系统拦。不放心的话可以看源码，自己编译。
 - 实际切换目前只在一台 M1 Pro MacBook（macOS 15）上测过。Intel Mac、台式 Mac，还有 macOS 13 和 14 都还没在真机上跑过。没电池的情况有模拟测试覆盖，但没上真机。
 - 合上盖子后任务能不能继续跑，不同机型可能不一样，第一次用最好自己试一下。
-- 合盖关屏功能还没在真机上测过。
+- 合盖关屏和合盖期间保持黑屏还没在真机上完整测过。保持黑屏用的是 macOS 未公开的亮度接口，以后的系统更新可能让它失效。
 
 自动化测试：12 项模拟测试全部通过，arm64 和 x86_64 各 18 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
 
@@ -130,7 +130,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 - Open the menu to see the current sleep timers, power source, battery level and the last time your Mac actually slept (tracked while PowerSwitcher is running).
 - After every switch it reads the system settings back to make sure the change stuck. If it didn't, it tries to undo the change and tells you which step failed.
 - Sleep Now checks that your Mac really fell asleep. If it hasn't after 20 seconds, you'll see why.
-- For laptops: in Task mode the screen may stay on after you close the lid. PowerSwitcher turns the display off when the lid closes while your work keeps running. It leaves things alone if an external display is connected, and you can turn it off in Settings.
+- For laptops: in Task mode the screen may stay on after you close the lid. PowerSwitcher turns the display off when the lid closes while your work keeps running, and leaves things alone if an external display is connected. Remote-control apps such as UU Remote may wake the screen again, so by default the built-in brightness is also held at 0 while the lid is closed: the panel stays dark, remote viewing keeps working, and brightness comes back when you open the lid. You can turn off either option in Settings.
 - A short setup guide on first launch gets your sleep timers set and you're good to go.
 
 ### New in 1.5.0
@@ -161,7 +161,7 @@ If the app ever won't open, running `sudo pmset -a disablesleep 0` in Terminal d
 - It isn't notarized by Apple, which is why macOS blocks it the first time. If that bothers you, read the source and build it yourself.
 - Real switching has only been tested on one M1 Pro MacBook running macOS 15. Intel Macs, desktop Macs and macOS 13 and 14 haven't been tried on real hardware yet. Macs without a battery are covered by mock tests, not by a real machine.
 - Whether work keeps running after you close the lid can depend on the model. Try it yourself the first time.
-- Turning the display off on lid close hasn't been tested on real hardware yet.
+- Turning the display off and keeping it dark on lid close haven't been fully tested on real hardware yet. Keeping it dark relies on a private macOS brightness API, which a future macOS update could break.
 
 Automated tests: all 12 mock tests pass, and all 18 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
 

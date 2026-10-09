@@ -1,3 +1,24 @@
+# Validation — 1.5.1 (2026-10-09)
+
+## Diagnosis on the reporting machine (read-only)
+
+- Apple M1 Pro (MacBookPro18,3), macOS 15.7.4, PowerSwitcher 1.5.0 in Task mode, built-in display only.
+- `pmset -g log` during the user's lid test: display turned off about 2 s after the lid event (consistent with the 2 s lid poll), then `UURemoteServer` created `UserIsActive "Wake Up Display"` assertions and the display turned on again within 0–1 s of each later display-off. AweSun also held a display-sleep assertion.
+- `DisplayServicesGetBrightness` on the built-in display returned a value; no brightness was changed during diagnosis.
+
+## Build results
+
+- Python mock tests: **12/12 PASS**.
+- Universal build: **PASS**, no compiler errors or warnings; `lipo -archs`: `x86_64 arm64`; strict ad-hoc signature verification passes.
+- Build-time self-test and extracted x86_64 self-test under Rosetta: **18/18 PASS**; both report `Backlight API: available`.
+- Settings window rendered offscreen in Chinese and English to check layout of the new option.
+
+## Not performed
+
+- No lid close, brightness change, mode switch or administrator authorization by the assistant. Dark-panel behavior with the lid closed, restore on open, remote viewing through UU Remote / AweSun, and external-display clamshell mode still need a hands-on test by the user.
+
+---
+
 ## 1.5.0 publication rebuild — 2026-10-09
 
 - About credits and README now list Tobe Wang, GPT, Claude without author-rank labels. The spelling correction to Claude was rebuilt and the checks below rerun.
