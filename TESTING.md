@@ -13,9 +13,14 @@
 - Build-time self-test and extracted x86_64 self-test under Rosetta: **18/18 PASS**; both report `Backlight API: available`.
 - Settings window rendered offscreen in Chinese and English to check layout of the new option.
 
+## Hands-on check by the user
+
+- On the reporting M1 Pro / macOS 15.7.4 machine, the user installed the 1.5.1 build, closed the lid in Task mode and reported the screen-stays-lit problem resolved. Individual observations (light leak, UU Remote viewing, restore on open) were not itemized in the report.
+
 ## Not performed
 
-- No lid close, brightness change, mode switch or administrator authorization by the assistant. Dark-panel behavior with the lid closed, restore on open, remote viewing through UU Remote / AweSun, and external-display clamshell mode still need a hands-on test by the user.
+- No lid close, brightness change, mode switch or administrator authorization by the assistant.
+- External-display clamshell mode, crash-recovery restore, other Mac models and other macOS versions were not tested.
 
 ---
 

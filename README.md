@@ -1,6 +1,6 @@
-# PowerSwitcher 1.5.0
+# PowerSwitcher 1.5.1
 
-**v1.5.0** · [中文](#中文) / [English](#english)
+**v1.5.1** · [中文](#中文) / [English](#english)
 
 ## 中文
 
@@ -10,7 +10,7 @@ PowerSwitcher 是个菜单栏小工具，只有两个选项：任务模式让 Ma
 
 macOS 13+ · Apple Silicon / Intel · 笔记本和台式机都能用 · 中文 / English · MIT 开源
 
- [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal-installer.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
+ [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.1/PowerSwitcher-1.5.1-universal-installer.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.1/PowerSwitcher-1.5.1-source.zip)  
 
 一个包同时支持 Apple Silicon 和 Intel · 没有 Apple 公证，第一次打开要手动放行（见下面的「安装」）
 
@@ -39,6 +39,11 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 - 笔记本用户：任务模式下合上盖子，屏幕可能不会灭。PowerSwitcher 会在合盖时把屏幕关掉，任务照跑；接着外接显示器时不会这么做。UU 远程这类远程控制软件可能会把屏幕重新点亮，所以默认还会在合盖期间把内屏亮度降到 0：屏幕不发光，远程画面照常，开盖后恢复原亮度。这两项都可以在「设置…」里关掉。
 - 第一次打开有个简单的向导，设好休眠时间就能用了。
 
+### 1.5.1 更新
+
+- 修复：任务模式下合上盖子，屏幕可能被远程控制软件（比如 UU 远程）重新点亮，一直亮着。
+- 「设置…」里新增「合盖期间保持黑屏」，默认开启：合盖期间内屏亮度保持在 0，远程画面照常，开盖后恢复原亮度。详见 [1.5.1 更新说明](docs/UPDATE-1.5.1.md)。
+
 ### 1.5.0 新增
 
 - 加了英文界面。系统语言是中文就显示中文，其他语言显示英文。
@@ -48,7 +53,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 
 ### 安装
 
-1. 下载 `PowerSwitcher-1.5.0-universal-installer.zip`，解压。
+1. 下载 `PowerSwitcher-1.5.1-universal-installer.zip`，解压。
 2. 把 `PowerSwitcher.app` 拖进「应用程序」，打开，跟着向导走一遍。
 3. 以后点菜单栏图标切换就行。每次切换，系统会让你输一次管理员密码。
 
@@ -67,7 +72,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 - 没有 Apple 公证，所以第一次打开会被系统拦。不放心的话可以看源码，自己编译。
 - 实际切换目前只在一台 M1 Pro MacBook（macOS 15）上测过。Intel Mac、台式 Mac，还有 macOS 13 和 14 都还没在真机上跑过。没电池的情况有模拟测试覆盖，但没上真机。
 - 合上盖子后任务能不能继续跑，不同机型可能不一样，第一次用最好自己试一下。
-- 合盖关屏和合盖期间保持黑屏还没在真机上完整测过。保持黑屏用的是 macOS 未公开的亮度接口，以后的系统更新可能让它失效。
+- 合盖关屏和合盖期间保持黑屏目前只在一台 M1 Pro MacBook（macOS 15）上实测过。保持黑屏用的是 macOS 未公开的亮度接口，以后的系统更新可能让它失效。
 
 自动化测试：12 项模拟测试全部通过，arm64 和 x86_64 各 18 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
 
@@ -104,7 +109,7 @@ PowerSwitcher is a small menu bar app with two options: Task mode keeps your Mac
 
 macOS 13+ · Apple Silicon / Intel · Laptops and desktops · 中文 / English · MIT licensed
 
- [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal-installer.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
+ [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.1/PowerSwitcher-1.5.1-universal-installer.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.1/PowerSwitcher-1.5.1-source.zip)  
 
 One download for Apple Silicon and Intel · Not notarized by Apple, so you'll have to allow it the first time (see Install below)
 
@@ -133,6 +138,11 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 - For laptops: in Task mode the screen may stay on after you close the lid. PowerSwitcher turns the display off when the lid closes while your work keeps running, and leaves things alone if an external display is connected. Remote-control apps such as UU Remote may wake the screen again, so by default the built-in brightness is also held at 0 while the lid is closed: the panel stays dark, remote viewing keeps working, and brightness comes back when you open the lid. You can turn off either option in Settings.
 - A short setup guide on first launch gets your sleep timers set and you're good to go.
 
+### New in 1.5.1
+
+- Fix: in Task mode, remote-control apps such as UU Remote could wake the screen after the lid closed and leave it on.
+- New Settings option, on by default: "Keep the screen dark while the lid is closed". Built-in brightness stays at 0 while the lid is shut, remote viewing still works, and brightness comes back when you open the lid. See the [1.5.1 update notes](docs/UPDATE-1.5.1.md).
+
 ### New in 1.5.0
 
 - English interface. If your system language is Chinese you get Chinese, otherwise English.
@@ -142,7 +152,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 
 ### Install
 
-1. Download `PowerSwitcher-1.5.0-universal-installer.zip` and unzip it.
+1. Download `PowerSwitcher-1.5.1-universal-installer.zip` and unzip it.
 2. Drag `PowerSwitcher.app` into Applications, open it and follow the setup guide.
 3. From then on, just switch modes from the menu bar icon. macOS asks for your administrator password each time.
 
@@ -161,7 +171,7 @@ If the app ever won't open, running `sudo pmset -a disablesleep 0` in Terminal d
 - It isn't notarized by Apple, which is why macOS blocks it the first time. If that bothers you, read the source and build it yourself.
 - Real switching has only been tested on one M1 Pro MacBook running macOS 15. Intel Macs, desktop Macs and macOS 13 and 14 haven't been tried on real hardware yet. Macs without a battery are covered by mock tests, not by a real machine.
 - Whether work keeps running after you close the lid can depend on the model. Try it yourself the first time.
-- Turning the display off and keeping it dark on lid close haven't been fully tested on real hardware yet. Keeping it dark relies on a private macOS brightness API, which a future macOS update could break.
+- Turning the display off and keeping it dark on lid close have only been tested hands-on on one M1 Pro MacBook running macOS 15. Keeping it dark relies on a private macOS brightness API, which a future macOS update could break.
 
 Automated tests: all 12 mock tests pass, and all 18 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
 
