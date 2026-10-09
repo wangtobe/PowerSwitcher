@@ -49,7 +49,7 @@ def main():
         run('codesign', '--verify', '--strict', str(app))
         run(str(contents / 'MacOS/PowerSwitcher'), '--self-test')
         dist = ROOT / 'dist'; dist.mkdir(exist_ok=True)
-        archive = dist / ('PowerSwitcher-' + VERSION + '-universal.zip')
+        archive = dist / ('PowerSwitcher-' + VERSION + '-universal-installer.zip')
         # Zip in temporary storage to avoid cloud-provider metadata contaminating signatures.
         run('/usr/bin/ditto', '-c', '-k', '--norsrc', '--keepParent', str(app), str(work / 'release.zip'))
         shutil.copyfile(work / 'release.zip', archive)

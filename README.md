@@ -1,6 +1,6 @@
 # PowerSwitcher 1.5.0
 
-**预发布 / Pre-release** · [中文](#中文) / [English](#english)
+**v1.5.0** · [中文](#中文) / [English](#english)
 
 ## 中文
 
@@ -10,7 +10,7 @@ PowerSwitcher 是个菜单栏小工具，只有两个选项：任务模式让 Ma
 
 macOS 13+ · Apple Silicon / Intel · 笔记本和台式机都能用 · 中文 / English · MIT 开源
 
- [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
+ [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal-installer.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
 
 一个包同时支持 Apple Silicon 和 Intel · 没有 Apple 公证，第一次打开要手动放行（见下面的「安装」）
 
@@ -48,7 +48,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 
 ### 安装
 
-1. 下载 `PowerSwitcher-1.5.0-universal.zip`，解压。
+1. 下载 `PowerSwitcher-1.5.0-universal-installer.zip`，解压。
 2. 把 `PowerSwitcher.app` 拖进「应用程序」，打开，跟着向导走一遍。
 3. 以后点菜单栏图标切换就行。每次切换，系统会让你输一次管理员密码。
 
@@ -104,7 +104,7 @@ PowerSwitcher is a small menu bar app with two options: Task mode keeps your Mac
 
 macOS 13+ · Apple Silicon / Intel · Laptops and desktops · 中文 / English · MIT licensed
 
- [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
+ [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal-installer.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip)  
 
 One download for Apple Silicon and Intel · Not notarized by Apple, so you'll have to allow it the first time (see Install below)
 
@@ -142,7 +142,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 
 ### Install
 
-1. Download `PowerSwitcher-1.5.0-universal.zip` and unzip it.
+1. Download `PowerSwitcher-1.5.0-universal-installer.zip` and unzip it.
 2. Drag `PowerSwitcher.app` into Applications, open it and follow the setup guide.
 3. From then on, just switch modes from the menu bar icon. macOS asks for your administrator password each time.
 
