@@ -41,7 +41,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 
 ### 定时切换
 
-- **任务模式，定时结束**：在菜单里选 1、2、4、8 小时后，或者到早上 08:00，到点自动切回日常模式。在日常模式下选，会先切到任务模式，只输一次密码。手动切回日常模式时，定时会自动取消。
+- **任务模式，定时结束**：在菜单里选 1、2、4、8 小时后、到早上 08:00，或者用「自定义时间…」精确到分钟（最远 7 天以内），到点自动切回日常模式。在日常模式下选，会先切到任务模式，只输一次密码。手动切回日常模式时，定时会自动取消。
 - **每天定时切换**：在「设置…」里设定每天几点进入任务模式、几点切回日常模式，两项可以只开一项。
 - 到点自动切换，不用再输密码，用的是和手动切换同一套「设置、核对、失败回退」流程。Mac 在睡眠时错过的定时，会在唤醒后执行；任务模式的定时结束如果遇上关机，开机后也会补上。
 - 设置定时的时候需要输一次管理员密码，用来在系统里登记定时任务（`/Library/LaunchDaemons` 里以 `org.powerswitcher.schedule` 开头的文件）。它们只在到点时运行一下就退出，执行记录在 `/Library/Logs/PowerSwitcher-schedule.log`。macOS 可能会弹出「已添加后台项目」的通知，属于正常现象；如果在「系统设置 → 通用 → 登录项」里把它关掉，定时就不会执行。
@@ -160,7 +160,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 
 ### Scheduled switches
 
-- **Task Mode for…**: from the menu, pick 1, 2, 4 or 8 hours, or until 08:00, and your Mac returns to Daily mode on its own. Picking one in Daily mode switches to Task mode first, with a single password prompt. Switching back to Daily mode by hand cancels the timer.
+- **Task Mode for…**: from the menu, pick 1, 2, 4 or 8 hours, until 08:00, or any time to the minute with "Custom Time…" (up to 7 days ahead), and your Mac returns to Daily mode on its own. Picking one in Daily mode switches to Task mode first, with a single password prompt. Switching back to Daily mode by hand cancels the timer.
 - **Daily schedule**: in Settings, choose a time to enter Task mode and a time to return to Daily mode every day. You can turn on just one of them.
 - Scheduled switches need no password when they fire and use the same apply, verify and roll-back steps as manual switches. A time missed while your Mac sleeps runs when it wakes, and a Task mode timer missed while it's shut down runs after the next startup.
 - Setting a schedule asks for your administrator password once, to register system jobs (files starting with `org.powerswitcher.schedule` in `/Library/LaunchDaemons`). They only run briefly at the scheduled time and log to `/Library/Logs/PowerSwitcher-schedule.log`. macOS may show a "Background Items Added" notification; that's expected. If you turn the item off in System Settings → General → Login Items, schedules won't run.

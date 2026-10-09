@@ -2,7 +2,7 @@
 
 ## 1.6.0 — 2026-10-09
 
-- Scheduled switches. "Task Mode for…" in the menu ends Task mode after 1, 2, 4 or 8 hours or at 08:00, entering Task mode first when needed; a daily schedule in Settings enters Task mode and/or returns to Daily mode at chosen times.
+- Scheduled switches. "Task Mode for…" in the menu ends Task mode after 1, 2, 4 or 8 hours, at 08:00, or at a custom date and time to the minute (up to 7 days ahead), entering Task mode first when needed; a daily schedule in Settings enters Task mode and/or returns to Daily mode at chosen times.
 - Schedules run unattended as launchd jobs in /Library/LaunchDaemons (`org.powerswitcher.schedule.*`), registered with one administrator prompt. Each plist carries the regular switching script inline (root-owned, nothing user-writable is executed), so scheduled switches use the same apply, verify and rollback steps. Jobs log to /Library/Logs/PowerSwitcher-schedule.log.
 - The one-shot end of Task mode also runs at load so it catches up after a shutdown, checks its end time and its own plist before acting, and removes itself afterwards. The daily return to Daily mode and manual switches to Daily mode clear a pending end.
 - Daily timers are baked into the jobs and re-registered when they change. A switch combined with a schedule change uses a single prompt; schedule registration only happens after the switch succeeds.

@@ -327,6 +327,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let morning = Schedule.next(.dailyDefault)
         let until = addItem(L("到 \(Format.time(morning))", "Until \(Format.time(morning))"), #selector(chooseTimed(_:)), to: timedMenu)
         until.representedObject = morning
+        addItem(L("自定义时间…", "Custom Time…"), #selector(chooseCustomTimed), to: timedMenu)
 
         timedMenu.addItem(.separator())
         let plan = schedule.plan
@@ -338,6 +339,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func chooseTimed(_ sender: NSMenuItem) {
         guard let end = sender.representedObject as? Date else { return }
+        setTaskEnd(end)
+    }
+
+    /// Any date and time to the minute, from one minute to seven days ahead.
+    @objc private func chooseCustomTimed() {
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .textFieldAndStepper
+        picker.datePickerElements = [.yearMonthDay, .hourMinute]
+        picker.locale = L10n.locale
+        picker.minDate = Schedule.endTime(after: 60)
+        picker.maxDate = Date().addingTimeInterval(7 * 86_400)
+        picker.dateValue = schedule.plan.taskEnd ?? Schedule.endTime(after: 3600)
+        picker.sizeToFit()
+
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = snapshot?.mode == .task ? L("几点切回日常模式？", "When should Task mode end?")
+                                                    : L("切到任务模式，几点切回日常模式？", "Switch to Task mode until when?")
+        alert.informativeText = L("可以精确到分钟，最远 7 天以内。", "Pick any time to the minute, up to 7 days ahead.")
+        alert.accessoryView = picker
+        alert.addButton(withTitle: L("确定", "OK"))
+        alert.addButton(withTitle: L("取消", "Cancel"))
+        alert.window.initialFirstResponder = picker
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let end = Schedule.endTime(after: 0, from: picker.dateValue)
+        guard end.timeIntervalSinceNow >= 30 else {
+            UI.alert(L("这个时间已经过了", "That time has already passed"), L("请重新选一个之后的时间。", "Please pick a later time."), style: .warning)
+            return
+        }
+        setTaskEnd(end)
+    }
+
+    private func setTaskEnd(_ end: Date) {
         var plan = schedule.plan
         plan.taskEnd = end
         if snapshot?.mode == .task {

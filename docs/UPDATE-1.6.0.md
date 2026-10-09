@@ -10,7 +10,7 @@
 
 ### 任务模式，定时结束
 
-菜单里多了「任务模式，定时结束」，可以选 1、2、4、8 小时后，或者到早上 08:00。到点后 Mac 会自动切回日常模式。
+菜单里多了「任务模式，定时结束」，可以选 1、2、4、8 小时后、到早上 08:00，或者点「自定义时间…」输入任意日期和时间，精确到分钟，最远 7 天以内。到点后 Mac 会自动切回日常模式。
 
 - 在日常模式下选：先切到任务模式，再定好结束时间，只输一次密码。
 - 在任务模式下选：只定结束时间；想改时间就重新选一个。
@@ -67,7 +67,7 @@ This update adds scheduled switches: a timer that ends Task mode, and a daily sc
 
 ### Task Mode for…
 
-The menu has a new "Task Mode for…" item: pick 1, 2, 4 or 8 hours, or until 08:00, and your Mac returns to Daily mode on its own.
+The menu has a new "Task Mode for…" item: pick 1, 2, 4 or 8 hours, until 08:00, or choose "Custom Time…" to enter any date and time to the minute, up to 7 days ahead. Your Mac returns to Daily mode on its own.
 
 - From Daily mode: switches to Task mode and sets the end time, with a single password prompt.
 - From Task mode: just sets the end time. Pick another one to change it.
