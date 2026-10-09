@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PowerSwitcher 1.5.0</title>
+<style>
+:root{color-scheme:light;--ink:#172523;--muted:#5c6a65;--paper:#f6f7f2;--line:#dce2d9;--green:#1b5848;--soft:#e9eee4;--card:#fff;--amber:#775022}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.8 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--green);text-underline-offset:4px}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid #ae7951;outline-offset:4px}.preview{background:var(--ink);color:#eef3ed;padding:11px 24px;text-align:center;font-size:13px;letter-spacing:.03em}.shell{max-width:1040px;margin:auto;padding:0 40px}.masthead{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:30px 0;border-bottom:1px solid var(--line)}.wordmark{font-weight:650;letter-spacing:-.03em;font-size:22px}.language{display:flex;gap:3px;padding:4px;border:1px solid var(--line);border-radius:30px}.language button{border:0;background:transparent;color:var(--muted);padding:5px 14px;border-radius:24px;font-size:13px}.language button[aria-selected=true]{background:var(--ink);color:#fff}.hero{padding:62px 0 48px;max-width:800px}.identity{display:flex;align-items:center;gap:18px;margin-bottom:28px}.identity img{width:68px;height:68px}.eyebrow{font-size:12px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}.version{font-size:14px;color:var(--muted);margin-top:2px}h1{font-size:clamp(32px,5.3vw,52px);line-height:1.24;letter-spacing:-.05em;margin:0 0 22px;font-weight:650}p{margin:0 0 16px}.lede{font-size:19px;color:var(--muted);max-width:720px}.chips{display:flex;flex-wrap:wrap;gap:9px;margin:26px 0}.chips span{background:var(--soft);padding:4px 12px;border-radius:5px;font-size:12px;color:var(--green)}.downloads{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.button{display:inline-block;text-decoration:none;border:1px solid var(--line);padding:11px 20px;border-radius:8px;font-size:14px;font-weight:600}.primary{background:var(--green);border-color:var(--green);color:#fff}.download-note{font-size:12px;color:var(--muted);margin-top:12px}.intro{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:28px 0;margin-bottom:38px;max-width:860px}.section{display:grid;grid-template-columns:180px minmax(0,1fr);gap:28px;padding:24px 0 36px;border-bottom:1px solid var(--line)}h2{font-size:20px;line-height:1.4;margin:0;letter-spacing:-.025em}h3{font-size:17px;margin:0 0 8px}ul,ol{margin:0;padding-left:22px}li{margin:6px 0}.modes{display:grid;grid-template-columns:1fr 1fr;gap:18px}.mode{background:var(--card);border:1px solid var(--line);padding:24px;border-radius:12px}.mode p{font-size:14px;color:var(--muted);margin:0}.symbol{display:block;color:var(--green);font-size:26px;line-height:1;margin-bottom:16px}.note{color:var(--muted);font-size:14px;margin-top:20px}.features li{margin-bottom:14px}.features strong{font-weight:600}.status{color:var(--green);font-weight:600}.caution{border-left:3px solid #ae7951;padding-left:18px;margin-top:24px}.caution h3{color:var(--amber)}.caution p{font-size:14px}.muted{color:var(--muted)}.small{font-size:13px}.authors{display:flex;flex-wrap:wrap;gap:12px 26px;font-size:19px;font-weight:550;margin-bottom:12px}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;overflow-wrap:anywhere}pre{background:var(--soft);padding:18px;border-radius:8px;white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}summary{cursor:pointer;color:var(--green);font-weight:600;font-size:15px}footer{padding:28px 0 42px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px}[hidden]{display:none!important}
+@media(max-width:680px){.shell{padding:0 22px}.masthead{padding:22px 0}.wordmark{font-size:19px}.hero{padding:38px 0}.lede{font-size:17px}.section{grid-template-columns:1fr;gap:18px}.modes{grid-template-columns:1fr}.preview{font-size:12px}.identity img{width:56px;height:56px}.button{text-align:center}.downloads{gap:9px}}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--ink:#e3ece5;--muted:#a4b5ac;--paper:#141c19;--line:#34423a;--green:#a5d8bd;--soft:#25372d;--card:#1a2720;--amber:#edc38c}.preview{background:#26372e;color:#e3ece5}.language button[aria-selected=true]{background:#dce9e0;color:#172523}.primary{background:#a5d8bd;color:#14261c}}
+</style>
+</head>
+<body>
+<div class="preview" id="preview-label">PowerSwitcher 1.5.0 · 预发布</div>
+<div class="shell">
+<header class="masthead"><span class="wordmark">PowerSwitcher</span><div class="language" role="tablist" aria-label="文案语言 / Copy language"><button id="tab-zh" role="tab" aria-selected="true" aria-controls="copy-zh" type="button">中文</button><button id="tab-en" role="tab" aria-selected="false" aria-controls="copy-en" type="button">English</button></div></header>
+<main>
+
+<article id="copy-zh" role="tabpanel" aria-labelledby="tab-zh">
+<section class="hero">
+<div class="identity"><img src="../Assets/PowerIcon.png" alt="PowerSwitcher 图标：月亮与闪电"><div><div class="eyebrow">macOS 菜单栏工具</div><div class="version">v1.5.0 · 预发布</div></div></div>
+<h1>跑任务时不睡，<br>跑完了照常睡。</h1>
+<p class="lede">PowerSwitcher 是个菜单栏小工具，只有两个选项：任务模式让 Mac 不休眠，日常模式恢复正常休眠。跑 agent、编译、下大文件之前点一下，跑完再点回来。</p>
+<div class="chips"><span>macOS 13+</span><span>Apple Silicon / Intel</span><span>笔记本和台式机都能用</span><span>中文 / English</span><span>MIT 开源</span></div>
+<div class="downloads"><a class="button primary" href="https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal.zip" download>下载 PowerSwitcher ↓</a><a class="button" href="https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip" download>下载源码</a></div>
+<p class="download-note">一个包同时支持 Apple Silicon 和 Intel · 没有 Apple 公证，第一次打开要手动放行（见下面的「安装」）</p>
+</section>
+
+<div class="intro"><p>想让 Mac 临时别睡，要么去系统设置里翻好几层，要么开终端敲 <code>sudo pmset</code>，跑完还得记得改回去，一不小心就忘了。PowerSwitcher 把这两套设置直接放进了菜单栏。</p><p style="margin:0">MacBook、iMac、Mac mini、Mac Studio、Mac Pro 都能用。没有电池的 Mac 会自动跳过电池相关的设置。</p></div>
+
+<section class="section"><h2>两种模式</h2><div>
+<div class="modes">
+<div class="mode"><span class="symbol" aria-hidden="true">ϟ</span><h3>任务模式 · 不休眠</h3><p>Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也一样。</p></div>
+<div class="mode"><span class="symbol" aria-hidden="true">☾</span><h3>日常模式 · 正常休眠</h3><p>闲置一段时间后自动休眠，时间你自己定。默认接电源 15 分钟，笔记本用电池 5 分钟。</p></div>
+</div>
+<p class="note">有两点要知道：日常模式只是「允许」Mac 休眠，如果有后台程序拦着不让睡，菜单里会告诉你是哪个。另外，切回日常模式用的是你自己设的时间，不会恢复成装这个工具之前的系统设置。</p>
+</div></section>
+
+<section class="section"><h2>一些小细节</h2><ul class="features">
+<li>菜单栏图标会跟着变：月亮是能睡，闪电是不睡。笔记本用电池时，闪电旁边会多一个感叹号，提醒你正在耗电。</li>
+<li>点开菜单能看到当前的休眠时间、电源状态、电量，还有上次真正睡着是什么时候（PowerSwitcher 开着的时候才记录）。</li>
+<li>每次切完都会再读一遍系统设置，确认真的改好了。没改成会尝试改回原样，并告诉你哪一步出了问题。</li>
+<li>点「立即休眠」后，它会确认 Mac 有没有真的睡着，20 秒还没睡就告诉你原因。</li>
+<li>笔记本用户：任务模式下合上盖子，屏幕可能不会灭。PowerSwitcher 会在合盖时把屏幕关掉，任务照跑；接着外接显示器时不会这么做。不需要的话可以在「设置…」里关掉。</li>
+<li>第一次打开有个简单的向导，设好休眠时间就能用了。</li>
+</ul></section>
+
+<section class="section"><h2>1.5.0 新增</h2><ul>
+<li>加了英文界面。系统语言是中文就显示中文，其他语言显示英文。</li>
+<li>也可以在菜单的「语言 / Language」里手动换，重新打开应用后生效。</li>
+<li>「关于」里加上了作者。</li>
+<li>切换电源的逻辑没有动。</li>
+</ul></section>
+
+<section class="section"><h2>安装</h2><div>
+<ol>
+<li>下载 <code>PowerSwitcher-1.5.0-universal.zip</code>，解压。</li>
+<li>把 <code>PowerSwitcher.app</code> 拖进「应用程序」，打开，跟着向导走一遍。</li>
+<li>以后点菜单栏图标切换就行。每次切换，系统会让你输一次管理员密码。</li>
+</ol>
+<p class="note">第一次打开如果弹窗说「无法验证开发者」，去「系统设置 → 隐私与安全性」，拉到最下面点「仍要打开」。不用为了这个去关 Gatekeeper。</p>
+<p class="note">密码是 macOS 自己的授权弹窗在要，PowerSwitcher 不会存。它也不装后台服务、不联网、不收集任何数据。Touch ID 暂时还不支持。</p>
+<div class="caution"><h3>用完记得切回来</h3>
+<p>退出或删掉 PowerSwitcher，任务模式不会跟着取消，Mac 会一直不睡。用完请手动切回日常模式。笔记本尤其要注意：装包之前先切回来，确认已经睡着了再放进去，不然它会在包里一直耗电、发热。</p>
+<p style="margin-bottom:0">万一应用打不开了，在终端运行 <code>sudo pmset -a disablesleep 0</code> 也能恢复。</p></div>
+</div></section>
+
+<section class="section"><h2>已知限制</h2><div>
+<ul>
+<li>没有 Apple 公证，所以第一次打开会被系统拦。不放心的话可以看源码，自己编译。</li>
+<li>实际切换目前只在一台 M1 Pro MacBook（macOS 15）上测过。Intel Mac、台式 Mac，还有 macOS 13 和 14 都还没在真机上跑过。没电池的情况有模拟测试覆盖，但没上真机。</li>
+<li>合上盖子后任务能不能继续跑，不同机型可能不一样，第一次用最好自己试一下。</li>
+<li>合盖关屏功能还没在真机上测过。</li>
+</ul>
+<p class="muted small" style="margin:16px 0 0">自动化测试：12 项模拟测试全部通过，arm64 和 x86_64 各 18 项自检全部通过。详细记录在源码包的 <code>TESTING.md</code> 里。</p>
+</div></section>
+
+<section class="section"><h2>开源与反馈</h2><div>
+<p>原生 AppKit 写的，不依赖第三方库，MIT 协议。有问题或想法欢迎提 issue 和 PR。手上有 Intel Mac、台式 Mac，或者还在用 macOS 13、14 的，特别欢迎帮忙测一下。</p>
+<p>报问题时说一下 macOS 版本、芯片、应用版本和复现步骤就行。贴日志前先看一眼，别把密码和序列号贴出来。</p>
+<details><summary>从源码编译</summary><p class="note">需要 macOS、Xcode Command Line Tools 和 Python 3。</p><pre><code>python3 -m unittest discover -s Tests -v
+python3 Scripts/build.py</code></pre></details>
+</div></section>
+
+<section class="section"><h2>作者</h2><div><div class="authors"><span>Tobe Wang</span><span>GPT</span><span>Claude</span></div></div></section>
+</article>
+
+<article id="copy-en" role="tabpanel" aria-labelledby="tab-en" lang="en" hidden>
+<section class="hero">
+<div class="identity"><img src="../Assets/PowerIcon.png" alt="PowerSwitcher icon: a moon and a lightning bolt"><div><div class="eyebrow">Menu bar utility for macOS</div><div class="version">v1.5.0 · Pre-release</div></div></div>
+<h1>Stays awake while your work runs.<br>Sleeps as usual when it's done.</h1>
+<p class="lede">PowerSwitcher is a small menu bar app with two options: Task mode keeps your Mac from sleeping, Daily mode brings normal sleep back. Click once before a long agent run, build or download, and click again when it's finished.</p>
+<div class="chips"><span>macOS 13+</span><span>Apple Silicon / Intel</span><span>Laptops and desktops</span><span>中文 / English</span><span>MIT licensed</span></div>
+<div class="downloads"><a class="button primary" href="https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-universal.zip" download>Download PowerSwitcher ↓</a><a class="button" href="https://github.com/wangtobe/PowerSwitcher/releases/download/v1.5.0/PowerSwitcher-1.5.0-source.zip" download>Download source</a></div>
+<p class="download-note">One download for Apple Silicon and Intel · Not notarized by Apple, so you'll have to allow it the first time (see Install below)</p>
+</section>
+
+<div class="intro"><p>Keeping a Mac awake for a while usually means digging through System Settings or typing <code>sudo pmset</code> in Terminal, then remembering to change it back, which is easy to forget. PowerSwitcher puts both setups right in the menu bar.</p><p style="margin:0">It works on any Mac: MacBook, iMac, Mac mini, Mac Studio or Mac Pro. On Macs without a battery, the battery settings are simply skipped.</p></div>
+
+<section class="section"><h2>Two modes</h2><div>
+<div class="modes">
+<div class="mode"><span class="symbol" aria-hidden="true">ϟ</span><h3>Task mode · No sleep</h3><p>Your Mac won't go to sleep on its own until you switch back. On a laptop, that includes running on battery.</p></div>
+<div class="mode"><span class="symbol" aria-hidden="true">☾</span><h3>Daily mode · Normal sleep</h3><p>Your Mac sleeps after sitting idle for as long as you choose. Defaults are 15 minutes on power and 5 minutes on battery.</p></div>
+</div>
+<p class="note">Two things worth knowing. Daily mode only <em>allows</em> sleep: if a background app is keeping your Mac awake, the menu tells you which one. And switching back uses the timers you picked, not whatever your settings were before you installed PowerSwitcher.</p>
+</div></section>
+
+<section class="section"><h2>Little things</h2><ul class="features">
+<li>The menu bar icon changes with the mode: a moon means it can sleep, a bolt means it won't. On a laptop running on battery, the bolt gets an exclamation mark so you know it's draining.</li>
+<li>Open the menu to see the current sleep timers, power source, battery level and the last time your Mac actually slept (tracked while PowerSwitcher is running).</li>
+<li>After every switch it reads the system settings back to make sure the change stuck. If it didn't, it tries to undo the change and tells you which step failed.</li>
+<li>Sleep Now checks that your Mac really fell asleep. If it hasn't after 20 seconds, you'll see why.</li>
+<li>For laptops: in Task mode the screen may stay on after you close the lid. PowerSwitcher turns the display off when the lid closes while your work keeps running. It leaves things alone if an external display is connected, and you can turn it off in Settings.</li>
+<li>A short setup guide on first launch gets your sleep timers set and you're good to go.</li>
+</ul></section>
+
+<section class="section"><h2>New in 1.5.0</h2><ul>
+<li>English interface. If your system language is Chinese you get Chinese, otherwise English.</li>
+<li>You can also pick a language under Language in the menu. It applies after you reopen the app.</li>
+<li>Authors are now listed in About.</li>
+<li>Power switching hasn't changed.</li>
+</ul></section>
+
+<section class="section"><h2>Install</h2><div>
+<ol>
+<li>Download <code>PowerSwitcher-1.5.0-universal.zip</code> and unzip it.</li>
+<li>Drag <code>PowerSwitcher.app</code> into Applications, open it and follow the setup guide.</li>
+<li>From then on, just switch modes from the menu bar icon. macOS asks for your administrator password each time.</li>
+</ol>
+<p class="note">If macOS says it can't verify the developer the first time you open it, go to System Settings → Privacy &amp; Security, scroll to the bottom and click Open Anyway. You don't need to turn off Gatekeeper for this.</p>
+<p class="note">The password prompt comes from macOS itself, and PowerSwitcher never stores it. It also doesn't install a background service, doesn't go online and doesn't collect any data. Touch ID isn't supported yet.</p>
+<div class="caution"><h3>Remember to switch back</h3>
+<p>Quitting or deleting PowerSwitcher doesn't cancel Task mode, so your Mac will stay awake. Switch back to Daily mode when you're done. This matters most on a laptop: switch back and make sure it's actually asleep before it goes in your bag, or it'll keep draining the battery and heating up in there.</p>
+<p style="margin-bottom:0">If the app ever won't open, running <code>sudo pmset -a disablesleep 0</code> in Terminal does the same thing.</p></div>
+</div></section>
+
+<section class="section"><h2>Known limitations</h2><div>
+<ul>
+<li>It isn't notarized by Apple, which is why macOS blocks it the first time. If that bothers you, read the source and build it yourself.</li>
+<li>Real switching has only been tested on one M1 Pro MacBook running macOS 15. Intel Macs, desktop Macs and macOS 13 and 14 haven't been tried on real hardware yet. Macs without a battery are covered by mock tests, not by a real machine.</li>
+<li>Whether work keeps running after you close the lid can depend on the model. Try it yourself the first time.</li>
+<li>Turning the display off on lid close hasn't been tested on real hardware yet.</li>
+</ul>
+<p class="muted small" style="margin:16px 0 0">Automated tests: all 12 mock tests pass, and all 18 self-tests pass on both arm64 and x86_64. Details are in <code>TESTING.md</code> in the source package.</p>
+</div></section>
+
+<section class="section"><h2>Open source</h2><div>
+<p>Written in native AppKit with no third-party libraries, under the MIT license. Issues and pull requests are welcome. Test reports from Intel Macs, desktop Macs, and macOS 13 or 14 are especially welcome.</p>
+<p>When you report a problem, mention your macOS version, chip, app version and how to reproduce it. Glance over any logs before posting so you don't share passwords or serial numbers.</p>
+<details><summary>Build from source</summary><p class="note">Requires macOS, Xcode Command Line Tools and Python 3.</p><pre><code>python3 -m unittest discover -s Tests -v
+python3 Scripts/build.py</code></pre></details>
+</div></section>
+
+<section class="section"><h2>Authors</h2><div><div class="authors"><span>Tobe Wang</span><span>GPT</span><span>Claude</span></div></div></section>
+</article>
+</main>
+<footer><span>PowerSwitcher 1.5.0</span><span>Native AppKit · MIT License</span></footer>
+</div>
+<script>
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function chooseLanguage(lang){tabs.forEach(tab=>{const active=tab.id==='tab-'+lang;tab.setAttribute('aria-selected',String(active));document.getElementById(tab.getAttribute('aria-controls')).hidden=!active});document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.getElementById('preview-label').textContent=lang==='zh'?'PowerSwitcher 1.5.0 · 预发布':'PowerSwitcher 1.5.0 · Pre-release'}
+tabs.forEach((tab,index)=>{tab.addEventListener('click',()=>chooseLanguage(tab.id.slice(4)));tab.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();const next=tabs[(index+1)%tabs.length];next.focus();chooseLanguage(next.id.slice(4))}})});
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+## 1.5.0 publication rebuild — 2026-10-09
+
+- About credits and README now list Tobe Wang, GPT, Claude without author-rank labels. The spelling correction to Claude was rebuilt and the checks below rerun.
+- Rebuilt Universal 2 successfully on macOS 15.7.4 / SDK 15.5. Build-time self-test: 18/18 PASS.
+- Extracted archive: arm64 and x86_64 self-tests each 18/18 PASS; x86_64 runs under Rosetta. `lipo -archs`: x86_64 arm64. Strict ad-hoc signature verification passes.
+- No power logic changes, real mode switches, administrator authorization or UI/lid behavior tests performed in this rebuild.
+
+# Validation — 1.5.0 (2026-10-04)
+
+## Changes and results
+
+- Added `Localization.swift`: system preferred language selects Chinese for `zh` variants and English otherwise; manual `zh` / `en` overrides apply on next launch.
+- Translated menus, setup/settings, feedback, date/time formatting and authorization prompt. Added native About credits in the requested order: Tobe Wang, GPT, Claude.
+- Host: Apple M1 Pro, macOS 15.7.4, macOS SDK 15.5, Python 3.9.
+- Python mock tests: **12/12 PASS** (5.159 seconds).
+- Universal build: **PASS**, targets arm64 and x86_64, minimum macOS 13.0. `lipo -archs` on the extracted app: `x86_64 arm64`.
+- Compilation fix: `.copyright` is not an `NSApplication.AboutPanelOptionKey`; copyright is now supplied through `NSHumanReadableCopyright` in Info.plist. Final build has no compiler errors or warnings.
+- Build-time self-test: **18/18 PASS**.
+- Freshly extracted app, native arm64: **18/18 PASS** with English and **18/18 PASS** with Chinese.
+- Freshly extracted app, `arch -x86_64` under Rosetta: **18/18 PASS** with English and **18/18 PASS** with Chinese. This is not a physical Intel test.
+- Language runs use `--self-test -AppleLanguages '(en)'` or `'(zh-Hans)'`, with `-interfaceLanguage system`; output confirmed `UI language: en` and `UI language: zh` respectively. Arguments do not persist a preference change.
+- Self-tests also cover Chinese variants, first preferred language, unsupported/empty fallback, manual overrides and time formatting.
+- Extracted app passes `codesign --verify --strict --verbose`; ad-hoc signing only, no Apple notarization.
+- `Scripts/power.sh` is unchanged from verified r4. SHA-256: `861d78e549c31aae56779c8b4925f8af2c0a056e7d7289120f7b8ea408b3ecb6`. Both embedded script hashes remain identical to 1.4.0 below.
+
+## Not performed
+
+- Normal AppKit lifecycle, visual layout inspection, About panel/menu interaction, persistent language preference saving and live system-language changes were not exercised. Translation selection tests do not establish visual correctness.
+- No mode switching, administrator authorization/password entry, lid-close/display-sleep commands, real sleep, login-item changes or app installation/replacement.
+- No physical Intel, UPS or macOS-version matrix testing. The older validation sections below describe earlier versions only.
+
+---
+
+# Validation — 1.4.0 (2026-09-30)
+
+## Verified on macOS
+
+- Host: Apple M1 Pro, macOS 15.7.4, Xcode Command Line Tools with macOS SDK 15.5, Python 3.9.
+- `python3 -m unittest discover -s Tests -v`: **12/12 passed** on macOS (3.786 seconds).
+- `python3 Scripts/build.py`: **passed on the first actual build**, exit 0. No Swift compiler errors or warnings appeared in the captured build log. No compilation fixes were needed.
+- Both `arm64-apple-macos13.0` and `x86_64-apple-macos13.0` compiled. The extracted application reports `x86_64 arm64` via `lipo -archs`.
+- Extracted application passes `codesign --verify --strict --verbose`; signing is ad-hoc, not Developer ID signing or notarization.
+- Build-time `--self-test`: **11/11 PASS**.
+- Freshly extracted application's native arm64 `--self-test`: **11/11 PASS**, exit 0.
+- `arch -x86_64 .../PowerSwitcher --self-test`: **11/11 PASS** under Rosetta, exit 0. This is not a physical Intel test.
+- All six Swift source files and `Scripts/power.sh` are byte-for-byte identical to the supplied 1.4.0 archive. Only validation documentation was updated.
+- `power.sh` SHA-256: `861d78e549c31aae56779c8b4925f8af2c0a056e7d7289120f7b8ea408b3ecb6`.
+- Native and Rosetta self-tests emitted the same embedded script hashes:
+  - normal: `9e1f5c77083818fdeb5c5f027c5dd981670f660e0a4c4305f16dddb4dc71d1d5`
+  - task: `eb616cf99d9039ed9eae796ac9ce3f5cb96d00b40ddefe224358731987ec62f7`
+
+## Changes after the verified build — r4 verified on macOS (2026-10-04)
+
+The r4 changes include revised copy and timer summaries in `main.swift`, `SetupWindows.swift` and `Preferences.swift`, plus `Sources/Lid.swift` (IOKit `AppleClamshellState`) and the task-mode lid watcher. `Scripts/power.sh` remains unchanged.
+
+### Input integrity
+
+Both supplied SHA-256 values matched before extraction into a new, separate directory:
+
+- `PowerSwitcher-1.4.0-source-r4.zip`: `e815b40e7bbc155fabe29379d25efb0cd7d0e4e840565803b926368d6013590f`
+- `changes-since-verified.diff`: `7955c1bdb67dcf1d9d0f7605b2140c396bcd6df67d14b7bc76fa1203bbf23cdb`
+
+### Results
+
+- Host: Apple M1 Pro, macOS 15.7.4, SDK 15.5, Python 3.9.
+- `python3 -m unittest discover -s Tests -v`: **12/12 PASS**, exit 0.
+- Chained with `&&`, `python3 Scripts/build.py`: **PASS**, exit 0; both arm64 and x86_64 compile targeting macOS 13.0.
+- No compiler errors or warnings in the captured build output; no source fixes needed.
+- Build-time self-test: **11/11 PASS**.
+- Freshly extracted app: `lipo -archs` reports **x86_64 arm64**; `codesign --verify --strict --verbose` passes.
+- Extracted native arm64 self-test: **11/11 PASS**, exit 0.
+- Extracted x86_64 self-test using `arch -x86_64` under Rosetta: **11/11 PASS**, exit 0. This is not physical Intel testing.
+- All seven Swift source files and both build/power scripts are byte-for-byte unchanged from the supplied r4 archive. Only this documentation section was updated.
+- `power.sh` SHA-256 remains `861d78e549c31aae56779c8b4925f8af2c0a056e7d7289120f7b8ea408b3ecb6`; both embedded script hashes match the prior verified build above.
+
+### Limits and actions not performed
+
+- The app was run only with `--self-test`; the normal AppKit lifecycle and lid watcher were not started.
+- No mode switching, administrator password entry, authorization request, display-sleep command, system sleep, installation, or replacement of the installed app.
+- Existing self-tests do not exercise `Lid.isClosed()`, external-display detection, polling or `pmset displaysleepnow`. Actual lid-close/display-off behavior, single-trigger behavior, external-monitor exclusion, remote wake and UI changes remain **not verified**.
+- No physical Intel or macOS 13 hardware test, Developer ID signing or Apple notarization.
+- Earlier UI inspection below applies to the previous build, not r4.
+
+## UI inspection — partial
+
+- Opened the extracted preview app without replacing the installed application.
+- Accessibility inspection confirmed the first-launch window titled “设置 PowerSwitcher”, welcome text, both mode descriptions, the “允许休眠不等于已经休眠” explanation, step 1 of 4, and the Continue button.
+- Screenshot capture timed out. A subsequent Continue action was refused because the tool reported stale application state; subsequent state refresh and reconnection also timed out. No successful page advance is claimed.
+- Consequently, visual layout, pages 2–4, the menu, settings window, feedback popover and dialogs remain unverified. No screenshot was obtained.
+- Copy review: several descriptions promise lid-close behavior. Treat these as claims requiring hardware validation; consider qualified wording before release. No UI text was changed during this compilation-focused review.
+
+## Deliberately not exercised
+
+- No mode-switch action, administrator authorization, “sleep now”, or live power-setting mutation.
+- `pmset -g` plus `pmset -g custom` output was identical before and after the preview check.
+- No login-item registration, setup completion, preference saving, low-battery warning, sleep/wake notification or lid-close tests.
+- No physical Intel, UPS or macOS-version matrix tests.
+- No GitHub upload, application installation/replacement, Developer ID signing or notarization.
+
+# Validation — 1.3.0 (2026-09-30)
+
+- Host: Apple M1 Pro, macOS 15.7.4, SDK 15.5.
+- Eight mock tests passed: laptop modes, desktop without battery/TTY/global key, UPS, profile-update failure rollback, global-update failure rollback, invalid input, unsupported profile, invalid mode.
+- `lipo -archs`: x86_64 arm64. Both slices target macOS 13.0.
+- Freshly extracted ZIP passes `codesign --verify --strict`.
+- Native arm64 `--self-test` passes without requesting privileges or changing power settings.
+- x86_64 `--self-test` passes under Rosetta on Apple Silicon. This is NOT physical Intel hardware testing.
+- New 1.3 cross-machine profile logic was tested with mock pmset, not live power mutation. Earlier 1.2 logic was tested on the host with real settings.
+- No physical Intel, UPS, all-OS matrix, lid-close, or idle-sleep behavior validation for this release.
+- Ad-hoc signed only; not Developer ID signed or notarized.
+- Public source excludes private snapshots, logs, machine IDs, usernames and local absolute paths. No private signing assets included.
+- Installed local application and power configuration were not changed by packaging.

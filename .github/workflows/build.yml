@@ -1,0 +1,15 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s Tests -v
+      - run: python3 Scripts/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PowerSwitcher-universal
+          path: dist/*.zip
