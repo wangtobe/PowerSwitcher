@@ -1,6 +1,6 @@
-# PowerSwitcher 1.6.0
+# PowerSwitcher 1.6.1
 
-**v1.6.0** · [中文](#中文) / [English](#english)
+**v1.6.1** · [中文](#中文) / [English](#english)
 
 ## 中文
 
@@ -10,7 +10,7 @@ PowerSwitcher 是个菜单栏小工具，只有两个选项：任务模式让 Ma
 
 macOS 13+ · Apple Silicon / Intel · 笔记本和台式机都能用 · 中文 / English · MIT 开源
 
- [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-universal-installer.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-source.zip)  
+ [下载 PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-universal-installer.zip) [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-source.zip)  
 
 一个包同时支持 Apple Silicon 和 Intel · 没有 Apple 公证，第一次打开要手动放行（见下面的「安装」）
 
@@ -46,9 +46,9 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 - 到点自动切换，不用再输密码，用的是和手动切换同一套「设置、核对、失败回退」流程。Mac 在睡眠时错过的定时，会在唤醒后执行；任务模式的定时结束如果遇上关机，开机后也会补上。
 - 设置定时的时候需要输一次管理员密码，用来在系统里登记定时任务（`/Library/LaunchDaemons` 里以 `org.powerswitcher.schedule` 开头的文件）。它们只在到点时运行一下就退出，执行记录在 `/Library/Logs/PowerSwitcher-schedule.log`。macOS 可能会弹出「已添加后台项目」的通知，属于正常现象；如果在「系统设置 → 通用 → 登录项」里把它关掉，定时就不会执行。
 
-### 1.6.0 新增
+### 1.6.1 新增
 
-- 定时切换：任务模式定时结束、每天定时切换。详见 [1.6.0 更新说明](docs/UPDATE-1.6.0.md)。
+- 定时切换：任务模式定时结束、每天定时切换。详见 [1.6.1 更新说明](docs/UPDATE-1.6.1.md)。
 
 ### 1.5.1 更新
 
@@ -64,7 +64,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 
 ### 安装
 
-1. 下载 `PowerSwitcher-1.6.0-universal-installer.zip`，解压。
+1. 下载 `PowerSwitcher-1.6.1-universal-installer.zip`，解压。
 2. 把 `PowerSwitcher.app` 拖进「应用程序」，打开，跟着向导走一遍。
 3. 以后点菜单栏图标切换就行。每次切换，系统会让你输一次管理员密码。
 
@@ -129,7 +129,7 @@ PowerSwitcher is a small menu bar app with two options: Task mode keeps your Mac
 
 macOS 13+ · Apple Silicon / Intel · Laptops and desktops · 中文 / English · MIT licensed
 
- [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-universal-installer.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-source.zip)  
+ [Download PowerSwitcher ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-universal-installer.zip) [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-source.zip)  
 
 One download for Apple Silicon and Intel · Not notarized by Apple, so you'll have to allow it the first time (see Install below)
 
@@ -165,9 +165,9 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 - Scheduled switches need no password when they fire and use the same apply, verify and roll-back steps as manual switches. A time missed while your Mac sleeps runs when it wakes, and a Task mode timer missed while it's shut down runs after the next startup.
 - Setting a schedule asks for your administrator password once, to register system jobs (files starting with `org.powerswitcher.schedule` in `/Library/LaunchDaemons`). They only run briefly at the scheduled time and log to `/Library/Logs/PowerSwitcher-schedule.log`. macOS may show a "Background Items Added" notification; that's expected. If you turn the item off in System Settings → General → Login Items, schedules won't run.
 
-### New in 1.6.0
+### New in 1.6.1
 
-- Scheduled switches: a timer for Task mode, and a daily schedule. See the [1.6.0 update notes](docs/UPDATE-1.6.0.md).
+- Scheduled switches: a timer for Task mode, and a daily schedule. See the [1.6.1 update notes](docs/UPDATE-1.6.1.md).
 
 ### New in 1.5.1
 
@@ -183,7 +183,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 
 ### Install
 
-1. Download `PowerSwitcher-1.6.0-universal-installer.zip` and unzip it.
+1. Download `PowerSwitcher-1.6.1-universal-installer.zip` and unzip it.
 2. Drag `PowerSwitcher.app` into Applications, open it and follow the setup guide.
 3. From then on, just switch modes from the menu bar icon. macOS asks for your administrator password each time.
 

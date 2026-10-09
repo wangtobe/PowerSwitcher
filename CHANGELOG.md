@@ -1,6 +1,8 @@
 # Changelog
 
-## 1.6.0 — 2026-10-09
+## 1.6.1 — 2026-10-09
+
+First public release of scheduled switches; 1.6.0 was an unreleased test build without the custom time option.
 
 - Scheduled switches. "Task Mode for…" in the menu ends Task mode after 1, 2, 4 or 8 hours, at 08:00, or at a custom date and time to the minute (up to 7 days ahead), entering Task mode first when needed; a daily schedule in Settings enters Task mode and/or returns to Daily mode at chosen times.
 - Schedules run unattended as launchd jobs in /Library/LaunchDaemons (`org.powerswitcher.schedule.*`), registered with one administrator prompt. Each plist carries the regular switching script inline (root-owned, nothing user-writable is executed), so scheduled switches use the same apply, verify and rollback steps. Jobs log to /Library/Logs/PowerSwitcher-schedule.log.

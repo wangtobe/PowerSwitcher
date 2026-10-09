@@ -1,12 +1,12 @@
-# PowerSwitcher 1.6.0
+# PowerSwitcher 1.6.1
 
-**v1.6.0** · [中文](#中文) / [English](#english)
+**v1.6.1** · [中文](#中文) / [English](#english)
 
 ## 中文
 
 这次更新加了定时切换：任务模式可以定时结束，也可以每天固定时间自动切换。
 
-[下载 PowerSwitcher 1.6.0 ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-universal-installer.zip) · [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-source.zip)
+[下载 PowerSwitcher 1.6.1 ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-universal-installer.zip) · [下载源码](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-source.zip)
 
 ### 任务模式，定时结束
 
@@ -49,7 +49,7 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 ### 怎么升级
 
 1. 从菜单退出旧版 PowerSwitcher。任务模式不会因此取消。
-2. 下载并解压 `PowerSwitcher-1.6.0-universal-installer.zip`。
+2. 下载并解压 `PowerSwitcher-1.6.1-universal-installer.zip`。
 3. 把新的 `PowerSwitcher.app` 拖进「应用程序」，替换旧版，然后打开。
 
 设置会保留。
@@ -63,7 +63,7 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 
 This update adds scheduled switches: a timer that ends Task mode, and a daily schedule.
 
-[Download PowerSwitcher 1.6.0 ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-universal-installer.zip) · [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.0/PowerSwitcher-1.6.0-source.zip)
+[Download PowerSwitcher 1.6.1 ↓](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-universal-installer.zip) · [Download source](https://github.com/wangtobe/PowerSwitcher/releases/download/v1.6.1/PowerSwitcher-1.6.1-source.zip)
 
 ### Task Mode for…
 
@@ -106,7 +106,7 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 ### How to update
 
 1. Quit the old PowerSwitcher from its menu. Task mode stays on.
-2. Download and unzip `PowerSwitcher-1.6.0-universal-installer.zip`.
+2. Download and unzip `PowerSwitcher-1.6.1-universal-installer.zip`.
 3. Drag the new `PowerSwitcher.app` into Applications to replace the old one, then open it.
 
 Your settings are kept.

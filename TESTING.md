@@ -1,4 +1,6 @@
-# Validation — 1.6.0 (2026-10-09)
+# Validation — 1.6.1 (2026-10-09)
+
+1.6.1 = the 1.6.0 test build plus the "Custom Time…" picker. Results below were rerun on 1.6.1 unless noted.
 
 ## Build results
 
