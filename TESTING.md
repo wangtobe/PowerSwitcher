@@ -11,12 +11,19 @@
 
 ## Schedule scripts in a sandbox (assistant, no root)
 
-The generated sync script and job scripts were run with `/Library` paths redirected to a temporary directory and `launchctl`, `chown` and `pmset` replaced by mocks (the pmset mock from `Tests/test_power.py`). 13/13 checks passed:
+The generated sync script and job scripts were run with `/Library` paths redirected to a temporary directory and `launchctl`, `chown` and `pmset` replaced by mocks (the pmset mock from `Tests/test_power.py`). 14/14 checks passed:
 
 - sync installs three plists (mode 644), bootstraps three jobs, creates the log; an empty plan removes all jobs;
 - the one-shot end does nothing before its time or without its plist; after its time it switches to Daily mode with the baked-in 20/4 min timers, removes its plist and boots itself out;
 - the daily Task job switches to Task mode; the daily Daily job switches to Daily mode and clears a pending end;
 - a failing pmset call inside a job rolls back and exits non-zero.
+- an end registered less than a minute ahead waits until the end time, then switches (added after the user's hands-on test, see below).
+
+## Hands-on check by the user (1.6.1 build 10)
+
+- Three Task mode timers set with "Custom Time…" each switched back to Daily mode (schedule log: exit 0 at 20:33:33, 20:36:17, 20:41:04). Their non-zero seconds suggest they ran at registration rather than on the calendar trigger: either the end had already passed while the password was typed (expected catch-up) or it was less than 60 s away, which the old 60 s tolerance ran immediately. Build 11 waits for the exact time instead.
+- After the 20:41:04 switch the Mac actually slept: `pmset -g log` shows "Entering Sleep state due to 'Idle Sleep'" on battery at 20:42:16 for 186 s, woken by opening the lid at 20:45:22.
+- Daily schedule jobs were registered at 20:39 (both plists present, root:wheel 644).
 
 The combined "switch to Task mode + register schedule" script also ran through `osascript -e 'do shell script …'` (without administrator privileges, sandboxed) to check AppleScript quoting: exit 0, Task mode set, three plists written, all pass `plutil -lint`.
 

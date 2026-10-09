@@ -150,7 +150,10 @@ enum Schedule {
             runAtLoad = true
             script = """
             [ -f \(job.path) ] || exit 0
-            [ "$(/bin/date +%s)" -ge \(epoch - 60) ] || exit 0
+            now=$(/bin/date +%s)
+            [ "$now" -ge \(epoch - 60) ] || exit 0
+            # Within the last minute (registered just before the end, or a slightly early fire): wait, never end early.
+            [ "$now" -ge \(epoch) ] || /bin/sleep $((\(epoch) - now))
             \(body("task-end", .normal, timers: t))
             /bin/rm -f \(job.path)
             /bin/launchctl bootout system/\(job.rawValue) </dev/null >/dev/null 2>&1
