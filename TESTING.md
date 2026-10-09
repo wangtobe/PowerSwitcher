@@ -19,6 +19,13 @@ The generated sync script and job scripts were run with `/Library` paths redirec
 - a failing pmset call inside a job rolls back and exits non-zero.
 - an end registered less than a minute ahead waits until the end time, then switches (added after the user's hands-on test, see below).
 
+## Hands-on check by the user (build 13)
+
+- App 1.6.1 (13) installed; the stale daily jobs were re-registered at 21:21:45 with the current revision.
+- Daily schedule set to 21:24 Task / 21:27 Daily. Log: `21:24:05 daily-task … exit 0`, `21:27:02 daily-normal … exit 0`, fired by the calendar a few seconds after the minute, not at registration. No pmset warnings in these entries.
+- After the Daily switch: SleepDisabled 0; Battery displaysleep lowered 3 → 1 to match sleep 1; AC displaysleep 2 left alone (already below sleep 10).
+- No idle sleep followed before the user returned (AC timer 10 min; Claude and backupd-helper held sleep assertions), so a real sleep after a scheduled switch was confirmed only for build 10 (20:42:16, see below).
+
 ## Stale job detection (build 13)
 
 - On the reporting Mac, the installed app was still build 10 and its two daily jobs (registered 21:15) carried build 10's script. `Schedule.installed()` run read-only against /Library/LaunchDaemons reports them stale; freshly generated jobs are not. Self-test now also checks that every generated job carries the current revision. Mock tests 15/15, self-tests 24/24, sandbox 14/14.

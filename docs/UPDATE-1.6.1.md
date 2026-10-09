@@ -56,7 +56,7 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 
 ### 要知道的
 
-- 定时切换目前做过模拟测试和 launchd 加载检查，真机上等到点的完整测试还在进行中，欢迎反馈。
+- 定时切换目前在一台 M1 Pro MacBook（macOS 15）上实测过：任务模式定时结束、每天定时进入任务模式和切回日常模式，都按时执行成功。其他机型和系统版本欢迎反馈。
 - 修复：如果「关闭显示器」的时间比休眠时间长，或者设成了「永不」，屏幕一直亮着，Mac 就不会闲置休眠，日常模式设的时间等于没用。现在切到日常模式时，会把这类显示器时间调到和休眠时间一样；本来更短的不动，任务模式不碰。这一项同样会核对，失败会回退。
 - 管理员授权、切换后核对和失败回退的流程都没有改动。
 
@@ -114,6 +114,6 @@ Your settings are kept.
 
 ### Good to know
 
-- Scheduled switches have been checked with mock tests and a launchd load test; hands-on testing at real scheduled times is ongoing. Reports are welcome.
+- Scheduled switches have been tested hands-on on one M1 Pro MacBook running macOS 15: the Task mode timer and both daily switches ran on time and succeeded. Reports from other Macs and macOS versions are welcome.
 - Fix: if the "turn display off" timer was longer than the sleep timer, or set to never, the display stayed on and the Mac never idle slept, so Daily mode's timer had no effect. Daily mode now lowers such display timers to match the sleep timer. Shorter ones are left alone and Task mode doesn't touch them. The change is verified and rolled back on failure like the rest.
 - Administrator authorization, post-switch checks and rollback work as before.

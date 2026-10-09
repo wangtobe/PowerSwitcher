@@ -92,10 +92,10 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 - 没有 Apple 公证，所以第一次打开会被系统拦。不放心的话可以看源码，自己编译。
 - 实际切换目前只在一台 M1 Pro MacBook（macOS 15）上测过。Intel Mac、台式 Mac，还有 macOS 13 和 14 都还没在真机上跑过。没电池的情况有模拟测试覆盖，但没上真机。
 - 合上盖子后任务能不能继续跑，不同机型可能不一样，第一次用最好自己试一下。
-- 定时切换目前只做过模拟测试和 launchd 加载检查，还没在真机上等到点完整跑过。
+- 定时切换目前只在一台 M1 Pro MacBook（macOS 15）上实测过。
 - 合盖关屏和合盖期间保持黑屏目前只在一台 M1 Pro MacBook（macOS 15）上实测过。保持黑屏用的是 macOS 未公开的亮度接口，以后的系统更新可能让它失效。
 
-自动化测试：12 项模拟测试全部通过，arm64 和 x86_64 各 23 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
+自动化测试：15 项模拟测试全部通过，arm64 和 x86_64 各 24 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
 
 ### 开源与反馈
 
@@ -212,10 +212,10 @@ for j in task-end daily-task daily-normal; do sudo launchctl bootout system/org.
 - It isn't notarized by Apple, which is why macOS blocks it the first time. If that bothers you, read the source and build it yourself.
 - Real switching has only been tested on one M1 Pro MacBook running macOS 15. Intel Macs, desktop Macs and macOS 13 and 14 haven't been tried on real hardware yet. Macs without a battery are covered by mock tests, not by a real machine.
 - Whether work keeps running after you close the lid can depend on the model. Try it yourself the first time.
-- Scheduled switches have been checked with mock tests and a launchd load test, but not yet run end to end at a real scheduled time.
+- Scheduled switches have only been tested hands-on on one M1 Pro MacBook running macOS 15.
 - Turning the display off and keeping it dark on lid close have only been tested hands-on on one M1 Pro MacBook running macOS 15. Keeping it dark relies on a private macOS brightness API, which a future macOS update could break.
 
-Automated tests: all 12 mock tests pass, and all 23 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
+Automated tests: all 15 mock tests pass, and all 24 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
 
 ### Open source
 
