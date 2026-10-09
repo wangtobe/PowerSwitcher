@@ -73,7 +73,10 @@ enum SelfTest {
             case .dailyNormal: jobsOK = jobsOK && info.time == ClockTime(hour: 7, minute: 30) && info.timers == timers && args[2].contains(Schedule.Job.taskEnd.path)
             }
         }
-        check(jobsOK, "scheduled job plists parse, round-trip and pass sh -n")
+        let revisionsOK = Schedule.Job.allCases.allSatisfy { job in
+            Schedule.plist(job, plan: plan, timers: timers).flatMap { Schedule.parse(Data($0.utf8)) }?.revision == Schedule.revision
+        }
+        check(jobsOK && revisionsOK, "scheduled job plists parse, round-trip and pass sh -n")
         check(Schedule.plist(.taskEnd, plan: Schedule.Plan(), timers: timers) == nil, "unused scheduled job omitted")
         let sync = Schedule.syncScript(Schedule.Plan(dailyNormal: ClockTime(hour: 8, minute: 0)), timers: timers)
         check(run("/bin/sh", ["-n", "-c", sync]).0 == 0 && sync.contains("remove_job " + Schedule.Job.taskEnd.rawValue)

@@ -211,6 +211,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 applyTimersItem.isHidden = matches || !Preferences.setupCompleted
                 applyTimersItem.toolTip = L("设定：", "Configured: ") + Format.timers(Preferences.timers, hasBattery: s.hasBattery)
             }
+            if schedule.isStale {
+                lines.append(L("定时任务是旧版本登记的，请在“任务模式，定时结束”里更新。", "Scheduled switches were set up by an older version. Update them under “Task Mode for…”."))
+            }
             card.update(symbols: mode.symbols, tint: tint(mode, s), title: mode.title, detail: lines.joined(separator: "\n"))
         } else {
             card.update(symbols: ["questionmark.circle"], tint: .secondaryLabelColor, title: snapshot == nil ? L("正在读取电源状态…", "Reading power status…") : L("无法读取电源状态", "Couldn't read power status"),
@@ -270,14 +273,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func switchTo(_ mode: PowerMode, plan: Schedule.Plan? = nil, quiet: Bool = false, then next: ((Bool) -> Void)? = nil) {
         guard switching == nil, !scheduling else { return }
+        let requested = plan
         var plan = plan
+        // Jobs registered by an older build are refreshed under the same prompt.
+        if plan == nil, schedule.isStale { plan = schedule.plan }
         // Returning to Daily mode by hand makes a pending end of Task mode pointless.
-        if mode == .normal, plan == nil, schedule.plan.taskEnd != nil {
-            plan = schedule.plan
+        if mode == .normal, schedule.plan.taskEnd != nil {
+            if plan == nil { plan = schedule.plan }
             plan?.taskEnd = nil
         }
         // Re-running the current preset only makes sense when daily timers differ from the settings.
-        if let s = snapshot, s.mode == mode, next == nil, plan == nil, mode == .task || s.matches(Preferences.timers) {
+        if let s = snapshot, s.mode == mode, next == nil, requested == nil, mode == .task || s.matches(Preferences.timers) {
             feedback.show(mode.symbols, tint: tint(mode, s), title: L("当前已是", "Already in ") + mode.title, detail: nil, from: statusItem.button)
             return
         }
@@ -310,6 +316,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func renderTimedMenu(_ mode: PowerMode?) {
         timedMenu.removeAllItems()
+        if schedule.isStale {
+            addItem(L("更新定时任务（应用已升级）…", "Update Scheduled Switches (App Updated)…"), #selector(refreshSchedule), symbols: ["exclamationmark.arrow.triangle.2.circlepath"], to: timedMenu)
+            timedMenu.addItem(.separator())
+        }
         if mode == .task, let end = schedule.plan.taskEnd {
             timedMenu.addItem(info(L("将于 \(Format.time(end)) 切回日常模式", "Returns to Daily mode at \(Format.time(end))")))
             addItem(L("取消定时", "Cancel Timer"), #selector(cancelTimed), to: timedMenu)
@@ -380,6 +390,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             switchTo(.task, plan: plan)
         }
+    }
+
+    @objc private func refreshSchedule() {
+        updateSchedule(schedule.plan, done: L("定时任务已更新", "Scheduled switches updated"))
     }
 
     @objc private func cancelTimed() {
@@ -587,7 +601,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         plan.dailyTask = daily.task
         plan.dailyNormal = daily.normal
         let returnsToDaily = plan.taskEnd != nil || plan.dailyNormal != nil
-        let needsSync = plan != schedule.plan || (returnsToDaily && schedule.timers != Preferences.timers.clamped)
+        let needsSync = plan != schedule.plan || schedule.isStale || (returnsToDaily && schedule.timers != Preferences.timers.clamped)
         readSnapshot { s in
             self.snapshot = s
             self.render()

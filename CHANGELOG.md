@@ -11,6 +11,7 @@ First public release of scheduled switches; 1.6.0 was an unreleased test build w
 - Daily timers are baked into the jobs and re-registered when they change. A switch combined with a schedule change uses a single prompt; schedule registration only happens after the switch succeeds.
 - Docs: privacy wording now says schedules register system jobs only when set; uninstall steps for schedules; `disablesleep 0` recovery wording corrected.
 - Daily mode lowers `displaysleep` to the idle timer when it is longer or 0 (never): powerd keeps the Mac awake while the display is on, so the daily timer had no effect. Shorter values are left alone, Task mode never touches it, and it is verified and rolled back with the other settings. The app treats a longer display timer as not matching the preset, so "Apply configured sleep timers…" appears.
+- Registered jobs carry a revision of the switching script. Jobs registered by another build are flagged in the status card and the timer submenu ("Update Scheduled Switches…"), and refreshed under the same prompt as the next switch or settings change.
 - Scheduled job logs drop pmset's display-vs-sleep timer warnings; other output, including rollback diagnostics, is kept.
 - Six new self-tests (24 total) and three new mock tests (15 total). Authorization, verification and rollback logic are unchanged.
 

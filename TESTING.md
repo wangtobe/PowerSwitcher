@@ -19,6 +19,11 @@ The generated sync script and job scripts were run with `/Library` paths redirec
 - a failing pmset call inside a job rolls back and exits non-zero.
 - an end registered less than a minute ahead waits until the end time, then switches (added after the user's hands-on test, see below).
 
+## Stale job detection (build 13)
+
+- On the reporting Mac, the installed app was still build 10 and its two daily jobs (registered 21:15) carried build 10's script. `Schedule.installed()` run read-only against /Library/LaunchDaemons reports them stale; freshly generated jobs are not. Self-test now also checks that every generated job carries the current revision. Mock tests 15/15, self-tests 24/24, sandbox 14/14.
+- Log read at 21:19: the 21:08:08 Task mode end exited 0 and SleepDisabled is 0 (Daily mode). Display timers were not aligned because build 12+ had not been installed.
+
 ## Display timer alignment (build 12)
 
 - Reported Mac: Battery displaysleep 0 / sleep 1, AC displaysleep 10 / sleep 5. pmset warned on every Daily switch, and powerd's "Prevent sleep while display is on" assertion means idle sleep waits for the display.

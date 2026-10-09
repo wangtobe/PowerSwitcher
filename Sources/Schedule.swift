@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 struct ClockTime: Equatable {
     var hour: Int
@@ -37,7 +38,15 @@ enum Schedule {
 
     static let log = "/Library/Logs/PowerSwitcher-schedule.log"
     static let failureMarker = "PowerSwitcher schedule update failed"
-    private static let endKey = "POWERSWITCHER_END", acKey = "POWERSWITCHER_DAILY_AC", batteryKey = "POWERSWITCHER_DAILY_BATTERY"
+    private static let endKey = "POWERSWITCHER_END", acKey = "POWERSWITCHER_DAILY_AC", batteryKey = "POWERSWITCHER_DAILY_BATTERY",
+                       revisionKey = "POWERSWITCHER_REVISION"
+    /// Bump when the job script layout changes.
+    private static let format = "2"
+
+    /// Identifies the switching script baked into registered jobs, so jobs from an older build can be re-registered.
+    static let revision: String = {
+        SHA256.hash(data: Data((format + "\n" + PowerScripts.body).utf8)).prefix(6).map { String(format: "%02x", $0) }.joined()
+    }()
 
     // MARK: Reading
 
@@ -45,6 +54,8 @@ enum Schedule {
         var plan = Plan()
         /// Daily timers baked into the jobs that return to Daily mode; nil when no such job exists.
         var timers: DailyTimers?
+        /// Some registered job carries a switching script from another build.
+        var isStale = false
     }
 
     /// What is registered now, read from the world-readable plists.
@@ -63,6 +74,7 @@ enum Schedule {
                 result.plan.dailyNormal = info.time
             }
             if job != .dailyTask, let timers = info.timers { result.timers = timers }
+            if info.revision != revision { result.isStale = true }
         }
         return result
     }
@@ -71,6 +83,7 @@ enum Schedule {
         var time: ClockTime?
         var end: Int?
         var timers: DailyTimers?
+        var revision: String?
     }
 
     static func parse(_ data: Data) -> JobInfo? {
@@ -81,6 +94,7 @@ enum Schedule {
         }
         let env = plist["EnvironmentVariables"] as? [String: String] ?? [:]
         info.end = env[endKey].flatMap { Int($0) }
+        info.revision = env[revisionKey]
         if let ac = env[acKey].flatMap({ Int($0) }), let battery = env[batteryKey].flatMap({ Int($0) }) {
             info.timers = DailyTimers(ac: ac, battery: battery)
         }
@@ -175,6 +189,7 @@ enum Schedule {
             """
         }
         if job == .dailyTask { env = [:] }
+        env[revisionKey] = revision
         var dict: [String: Any] = [
             "Label": job.rawValue,
             "ProgramArguments": ["/bin/sh", "-c", script],
@@ -184,7 +199,7 @@ enum Schedule {
             "StandardErrorPath": log,
             "AssociatedBundleIdentifiers": [Bundle.main.bundleIdentifier ?? "org.powerswitcher.app"],
         ]
-        if !env.isEmpty { dict["EnvironmentVariables"] = env }
+        dict["EnvironmentVariables"] = env
         guard let data = try? PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0) else { return nil }
         return String(data: data, encoding: .utf8)
     }
