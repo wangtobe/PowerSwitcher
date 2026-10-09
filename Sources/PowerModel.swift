@@ -143,7 +143,11 @@ struct PowerSnapshot {
     }
 }
 
-enum SwitchOutcome { case success, cancelled, failed(String) }
+enum SwitchOutcome {
+    case success, cancelled, failed(String)
+    /// The mode switch (if any) succeeded, but registering the scheduled jobs did not.
+    case scheduleFailed(String)
+}
 
 enum PowerCommand {
     /// Values are integers clamped in Swift and validated again by power.sh before any change.
@@ -152,17 +156,39 @@ enum PowerCommand {
         return "mode=\(mode.rawValue)\ndaily_ac=\(t.ac)\ndaily_battery=\(t.battery)\n" + PowerScripts.body
     }
 
-    static func apply(_ mode: PowerMode, timers: DailyTimers, completion: @escaping (SwitchOutcome) -> Void) {
-        let prompt = L("PowerSwitcher 需要管理员权限来切换到“\(mode.title)”。", "PowerSwitcher needs administrator access to switch to “\(mode.title)”.")
-        let source = "do shell script " + appleQuote(script(for: mode, timers: timers))
-            + " with prompt " + appleQuote(prompt) + " with administrator privileges"
+    /// Switches to `mode` and/or registers `schedule`, with a single administrator prompt.
+    /// The schedule is only touched after the switch succeeded.
+    static func apply(_ mode: PowerMode?, timers: DailyTimers, schedule: Schedule.Plan? = nil, completion: @escaping (SwitchOutcome) -> Void) {
+        let (script, prompt) = command(mode, timers: timers, schedule: schedule)
+        let source = "do shell script " + appleQuote(script) + " with prompt " + appleQuote(prompt) + " with administrator privileges"
         DispatchQueue.global(qos: .userInitiated).async {
             let (code, detail) = run("/usr/bin/osascript", ["-e", source])
+            let log = detail.trimmingCharacters(in: .whitespacesAndNewlines)
             let outcome: SwitchOutcome
             if code == 0 { outcome = .success }
             else if detail.contains("(-128)") { outcome = .cancelled }
-            else { outcome = .failed(detail.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            else if detail.contains(Schedule.failureMarker) { outcome = .scheduleFailed(log) }
+            else { outcome = .failed(log) }
             DispatchQueue.main.async { completion(outcome) }
         }
+    }
+
+    static func command(_ mode: PowerMode?, timers: DailyTimers, schedule: Schedule.Plan?) -> (script: String, prompt: String) {
+        var parts: [String] = []
+        var prompt: String
+        if let mode {
+            // Without a schedule the switching script runs exactly as before.
+            parts.append(schedule == nil ? script(for: mode, timers: timers) : "(\n" + script(for: mode, timers: timers) + "\n) || exit $?")
+            prompt = L("PowerSwitcher 需要管理员权限来切换到“\(mode.title)”", "PowerSwitcher needs administrator access to switch to “\(mode.title)”")
+            if let end = schedule?.taskEnd, mode == .task {
+                prompt += L("，并在 \(Format.time(end)) 自动切回日常模式。", " and to return to Daily mode at \(Format.time(end)).")
+            } else {
+                prompt += L("。", ".")
+            }
+        } else {
+            prompt = L("PowerSwitcher 需要管理员权限来更新定时切换。", "PowerSwitcher needs administrator access to update scheduled switches.")
+        }
+        if let schedule { parts.append(Schedule.syncScript(schedule, timers: timers)) }
+        return (parts.joined(separator: "\n"), prompt)
     }
 }

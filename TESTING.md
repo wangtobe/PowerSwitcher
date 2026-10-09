@@ -1,3 +1,34 @@
+# Validation — 1.6.0 (2026-10-09)
+
+## Build results
+
+- Host: Apple M1 Pro, macOS 15.7.4, SDK 15.5.
+- Python mock tests: **12/12 PASS**.
+- Universal build: **PASS**, no compiler errors or warnings; `lipo -archs`: `x86_64 arm64`; strict ad-hoc signature verification passes.
+- Build-time self-test and extracted x86_64 self-test under Rosetta: **23/23 PASS**. New checks: minute-aligned timer end, next 08:00, job plists parse and round-trip with `sh -n`, unused job omitted, sync script.
+
+## Schedule scripts in a sandbox (assistant, no root)
+
+The generated sync script and job scripts were run with `/Library` paths redirected to a temporary directory and `launchctl`, `chown` and `pmset` replaced by mocks (the pmset mock from `Tests/test_power.py`). 13/13 checks passed:
+
+- sync installs three plists (mode 644), bootstraps three jobs, creates the log; an empty plan removes all jobs;
+- the one-shot end does nothing before its time or without its plist; after its time it switches to Daily mode with the baked-in 20/4 min timers, removes its plist and boots itself out;
+- the daily Task job switches to Task mode; the daily Daily job switches to Daily mode and clears a pending end;
+- a failing pmset call inside a job rolls back and exits non-zero.
+
+The combined "switch to Task mode + register schedule" script also ran through `osascript -e 'do shell script …'` (without administrator privileges, sandboxed) to check AppleScript quoting: exit 0, Task mode set, three plists written, all pass `plutil -lint`.
+
+## launchd acceptance (assistant)
+
+A copy of the generated one-shot plist, with its label renamed and its program replaced by `echo`, was loaded into the user's `gui/501` domain: launchd registered the calendar trigger (Month/Day/Hour/Minute), ran it once at load, passed the environment variables, then it was booted out. Nothing was loaded into the system domain.
+
+## Not performed
+
+- No administrator authorization, no jobs registered in `/Library/LaunchDaemons`, no real scheduled switch, wake/boot catch-up, Background Items notification or Login Items toggle. These need a hands-on test by the user.
+- Settings window rendered offscreen (Chinese and English); the menu itself was not exercised.
+
+---
+
 # Validation — 1.5.1 (2026-10-09)
 
 ## Diagnosis on the reporting machine (read-only)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 — 2026-10-09
+
+- Scheduled switches. "Task Mode for…" in the menu ends Task mode after 1, 2, 4 or 8 hours or at 08:00, entering Task mode first when needed; a daily schedule in Settings enters Task mode and/or returns to Daily mode at chosen times.
+- Schedules run unattended as launchd jobs in /Library/LaunchDaemons (`org.powerswitcher.schedule.*`), registered with one administrator prompt. Each plist carries the regular switching script inline (root-owned, nothing user-writable is executed), so scheduled switches use the same apply, verify and rollback steps. Jobs log to /Library/Logs/PowerSwitcher-schedule.log.
+- The one-shot end of Task mode also runs at load so it catches up after a shutdown, checks its end time and its own plist before acting, and removes itself afterwards. The daily return to Daily mode and manual switches to Daily mode clear a pending end.
+- Daily timers are baked into the jobs and re-registered when they change. A switch combined with a schedule change uses a single prompt; schedule registration only happens after the switch succeeds.
+- Docs: privacy wording now says schedules register system jobs only when set; uninstall steps for schedules; `disablesleep 0` recovery wording corrected.
+- Five new self-tests (23 total). Power switching, authorization, verification and rollback logic are unchanged.
+
 ## 1.5.1 — 2026-10-09
 
 - Fix: in Task mode the screen could stay lit with the lid closed. Display sleep was requested once per closing, and remote-control tools (seen with UU Remote) woke the display again within a second.

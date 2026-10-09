@@ -6,7 +6,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let card = StatusCardView()
     private let blockersMenu = NSMenu()
     private var blockersItem: NSMenuItem!, applyTimersItem: NSMenuItem!, lastSleepItem: NSMenuItem!
-    private var dailyItem: NSMenuItem!, taskItem: NSMenuItem!, sleepItem: NSMenuItem!
+    private var dailyItem: NSMenuItem!, taskItem: NSMenuItem!, sleepItem: NSMenuItem!, timedItem: NSMenuItem!
+    private let timedMenu = NSMenu()
+    /// Scheduled jobs registered in /Library/LaunchDaemons, re-read on every render.
+    private var schedule = Schedule.Installed()
+    /// True while an administrator prompt is updating scheduled jobs without switching modes.
+    private var scheduling = false
 
     private var snapshot: PowerSnapshot?
     /// Target mode while an authorised switch is running.
@@ -87,6 +92,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         dailyItem.toolTip = L("允许系统休眠：闲置到设定时间后自动休眠。", "Allow system sleep after the configured idle interval.")
         taskItem = addItem(PowerMode.task.title, #selector(chooseTask), symbols: PowerMode.task.symbols)
         taskItem.toolTip = L("禁止系统休眠（使用电池时也一样），用于合上盖子后继续运行。", "Disable system sleep, including on battery, for ongoing work.")
+        timedItem = NSMenuItem(title: L("任务模式，定时结束", "Task Mode for…"), action: nil, keyEquivalent: "")
+        timedItem.image = symbol(["timer"], L("定时", "Timer"))
+        timedItem.submenu = timedMenu
+        menu.addItem(timedItem)
 
         menu.addItem(.separator())
         sleepItem = addItem(L("立即休眠…", "Sleep Now…"), #selector(sleepNow), symbols: ["moon.zzz"])
@@ -161,11 +170,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func render() {
-        let idle = switching == nil
-        let mode = idle ? snapshot?.mode : nil
+        schedule = Schedule.installed()
+        let idle = switching == nil && !scheduling
+        let mode = switching == nil ? snapshot?.mode : nil
         dailyItem.state = mode == .normal ? .on : .off
         taskItem.state = mode == .task ? .on : .off
-        [dailyItem, taskItem, sleepItem].forEach { $0?.isEnabled = idle }
+        [dailyItem, taskItem, sleepItem, timedItem].forEach { $0?.isEnabled = idle }
+        renderTimedMenu(mode)
         sleepItem.title = mode == .task ? L("切回日常模式并立即休眠…", "Switch to Daily Mode and Sleep…") : L("立即休眠…", "Sleep Now…")
         blockersItem.isHidden = true
         applyTimersItem.isHidden = true
@@ -183,6 +194,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             switch mode {
             case .task:
                 lines.append(L("已禁止系统休眠，Mac 不会自动休眠。", "System sleep is disabled. Your Mac will stay awake."))
+                if let end = schedule.plan.taskEnd {
+                    lines.append(L("将于 \(Format.time(end)) 自动切回日常模式。", "Returns to Daily mode at \(Format.time(end))."))
+                }
                 if let source = Format.source(s) { lines.append(source) }
                 if onBattery { lines.append(L("正在使用电池：放进包里前请切回日常模式。", "On battery: switch to Daily mode before putting your Mac in a bag.")) }
                 icon = onBattery ? ["bolt.trianglebadge.exclamationmark.fill", "exclamationmark.triangle.fill"] : mode.symbols
@@ -254,17 +268,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func chooseTask() { switchTo(.task) }
     @objc private func applyTimers() { switchTo(.normal) }
 
-    private func switchTo(_ mode: PowerMode, quiet: Bool = false, then next: ((Bool) -> Void)? = nil) {
-        guard switching == nil else { return }
+    private func switchTo(_ mode: PowerMode, plan: Schedule.Plan? = nil, quiet: Bool = false, then next: ((Bool) -> Void)? = nil) {
+        guard switching == nil, !scheduling else { return }
+        var plan = plan
+        // Returning to Daily mode by hand makes a pending end of Task mode pointless.
+        if mode == .normal, plan == nil, schedule.plan.taskEnd != nil {
+            plan = schedule.plan
+            plan?.taskEnd = nil
+        }
         // Re-running the current preset only makes sense when daily timers differ from the settings.
-        if let s = snapshot, s.mode == mode, next == nil, mode == .task || s.matches(Preferences.timers) {
+        if let s = snapshot, s.mode == mode, next == nil, plan == nil, mode == .task || s.matches(Preferences.timers) {
             feedback.show(mode.symbols, tint: tint(mode, s), title: L("当前已是", "Already in ") + mode.title, detail: nil, from: statusItem.button)
             return
         }
         switching = mode
         feedback.dismiss()
         render()
-        PowerCommand.apply(mode, timers: Preferences.timers) { outcome in
+        PowerCommand.apply(mode, timers: Preferences.timers, schedule: plan) { outcome in
             self.readSnapshot { snapshot in
                 self.switching = nil
                 self.snapshot = snapshot
@@ -278,9 +298,86 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 case .failed(let log):
                     self.reportFailure(mode, log)
                     next?(false)
+                case .scheduleFailed(let log):
+                    self.reportScheduleFailure(log)
+                    next?(true)
                 }
             }
         }
+    }
+
+    // MARK: Schedule
+
+    private func renderTimedMenu(_ mode: PowerMode?) {
+        timedMenu.removeAllItems()
+        if mode == .task, let end = schedule.plan.taskEnd {
+            timedMenu.addItem(info(L("将于 \(Format.time(end)) 切回日常模式", "Returns to Daily mode at \(Format.time(end))")))
+            addItem(L("取消定时", "Cancel Timer"), #selector(cancelTimed), to: timedMenu)
+            timedMenu.addItem(.separator())
+            timedMenu.addItem(info(L("改为：", "Change to:")))
+        } else if mode != .task {
+            timedMenu.addItem(info(L("切到任务模式，到点自动切回：", "Switch to Task mode, then return automatically:")))
+        } else {
+            timedMenu.addItem(info(L("到点自动切回日常模式：", "Return to Daily mode automatically:")))
+        }
+        for hours in [1, 2, 4, 8] {
+            let item = addItem(L("\(hours) 小时后", hours == 1 ? "In 1 Hour" : "In \(hours) Hours"), #selector(chooseTimed(_:)), to: timedMenu)
+            item.representedObject = Schedule.endTime(after: TimeInterval(hours * 3600))
+        }
+        let morning = Schedule.next(.dailyDefault)
+        let until = addItem(L("到 \(Format.time(morning))", "Until \(Format.time(morning))"), #selector(chooseTimed(_:)), to: timedMenu)
+        until.representedObject = morning
+
+        timedMenu.addItem(.separator())
+        let plan = schedule.plan
+        if let time = plan.dailyTask { timedMenu.addItem(info(L("每天 \(time.text) 进入任务模式", "Every day at \(time.text): Task mode"))) }
+        if let time = plan.dailyNormal { timedMenu.addItem(info(L("每天 \(time.text) 切回日常模式", "Every day at \(time.text): Daily mode"))) }
+        addItem(plan.dailyTask == nil && plan.dailyNormal == nil ? L("每天定时切换…", "Daily Schedule…") : L("更改每天定时…", "Change Daily Schedule…"),
+                #selector(showSettings), to: timedMenu)
+    }
+
+    @objc private func chooseTimed(_ sender: NSMenuItem) {
+        guard let end = sender.representedObject as? Date else { return }
+        var plan = schedule.plan
+        plan.taskEnd = end
+        if snapshot?.mode == .task {
+            updateSchedule(plan, done: L("将于 \(Format.time(end)) 切回日常模式", "Returns to Daily mode at \(Format.time(end))"))
+        } else {
+            switchTo(.task, plan: plan)
+        }
+    }
+
+    @objc private func cancelTimed() {
+        var plan = schedule.plan
+        plan.taskEnd = nil
+        updateSchedule(plan, done: L("已取消定时，任务模式会一直保持", "Timer cancelled. Task mode stays on"))
+    }
+
+    /// Registers `plan` without switching modes.
+    private func updateSchedule(_ plan: Schedule.Plan, done: String) {
+        guard switching == nil, !scheduling else { return }
+        scheduling = true
+        feedback.dismiss()
+        render()
+        PowerCommand.apply(nil, timers: Preferences.timers, schedule: plan) { outcome in
+            self.scheduling = false
+            self.render()
+            switch outcome {
+            case .success:
+                self.feedback.show(["timer"], tint: .systemBlue, title: done, detail: nil, from: self.statusItem.button)
+            case .cancelled:
+                break
+            case .failed(let log), .scheduleFailed(let log):
+                self.reportScheduleFailure(log)
+            }
+        }
+    }
+
+    private func reportScheduleFailure(_ log: String) {
+        let (response, _) = UI.alert(L("定时切换没有设置成功", "Couldn't set up the scheduled switch"),
+                                     L("当前模式以菜单顶部显示为准。可以稍后再试，或在“设置…”里查看每天定时。", "Check the status at the top of the menu. You can try again later or review the daily schedule in Settings."),
+                                     style: .warning, buttons: [L("好", "OK"), L("复制详细信息", "Copy Details")], log: log)
+        if response == .alertSecondButtonReturn { copy(log) }
     }
 
     private func confirmSwitch(_ mode: PowerMode, _ s: PowerSnapshot) {
@@ -288,6 +385,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch mode {
         case .task:
             detail = s.source == .battery ? L("正在使用电池，也不会自动休眠。请留意电量。", "On battery, system sleep is still disabled. Watch your battery level.") : L("已禁止系统休眠，Mac 不会自动休眠。", "System sleep is disabled. Your Mac will stay awake.")
+            if let end = schedule.plan.taskEnd { detail += L("\n将于 \(Format.time(end)) 自动切回日常模式。", "\nReturns to Daily mode at \(Format.time(end)).") }
         case .normal:
             detail = Format.timers(ac: s.acIdleMinutes, battery: s.idleMinutes("Battery Power")) + L("。", ".")
             let blockers = s.blockingProcesses.count
@@ -442,24 +540,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func showSettings() {
         if let window = settingsWindow { window.show(); return }
         let window = SettingsWindow(snapshot: snapshot)
-        window.onSave = { [weak self] in self?.settingsSaved() }
+        window.onSave = { [weak self] daily in self?.settingsSaved(daily) }
         window.onClose = { [weak self] in DispatchQueue.main.async { [weak self] in self?.settingsWindow = nil } }
         settingsWindow = window
         window.show()
     }
 
-    private func settingsSaved() {
+    private func settingsSaved(_ daily: (task: ClockTime?, normal: ClockTime?)) {
+        // Jobs returning to Daily mode carry the daily timers, so they are re-registered when the timers change.
+        var plan = schedule.plan
+        plan.dailyTask = daily.task
+        plan.dailyNormal = daily.normal
+        let returnsToDaily = plan.taskEnd != nil || plan.dailyNormal != nil
+        let needsSync = plan != schedule.plan || (returnsToDaily && schedule.timers != Preferences.timers.clamped)
         readSnapshot { s in
             self.snapshot = s
             self.render()
-            guard s.mode == .normal, !s.matches(Preferences.timers) else {
+            let timersPending = s.mode == .normal && !s.matches(Preferences.timers)
+            if timersPending {
+                let (response, _) = UI.alert(L("现在应用新的休眠时间？", "Apply the new sleep timers now?"), L("当前处于日常模式，系统仍在使用原来的休眠时间。应用新设定需要管理员密码。", "Daily mode is active but the system still uses the old timers. Applying new timers requires an administrator password."),
+                                             buttons: [L("现在应用", "Apply Now"), L("稍后", "Later")])
+                // One prompt covers both the timers and the schedule.
+                if response == .alertFirstButtonReturn { self.switchTo(.normal, plan: needsSync ? plan : nil); return }
+            }
+            if needsSync {
+                self.updateSchedule(plan, done: plan.dailyTask == nil && plan.dailyNormal == nil ? L("已关闭每天定时切换", "Daily schedule turned off") : L("每天定时切换已更新", "Daily schedule updated"))
+            } else if !timersPending {
                 self.feedback.show(["checkmark.circle"], tint: .systemGreen, title: L("设置已保存", "Settings Saved"),
                                    detail: s.mode == .task ? L("新的休眠时间会在切回日常模式时生效。", "New sleep timers will apply when you return to Daily mode.") : nil, from: self.statusItem.button)
-                return
             }
-            let (response, _) = UI.alert(L("现在应用新的休眠时间？", "Apply the new sleep timers now?"), L("当前处于日常模式，系统仍在使用原来的休眠时间。应用新设定需要管理员密码。", "Daily mode is active but the system still uses the old timers. Applying new timers requires an administrator password."),
-                                         buttons: [L("现在应用", "Apply Now"), L("稍后", "Later")])
-            if response == .alertFirstButtonReturn { self.switchTo(.normal) }
         }
     }
 

@@ -10,6 +10,10 @@ final class PreferencesForm: NSObject {
     private let loginBox = NSButton(checkboxWithTitle: L("登录 Mac 时自动打开 PowerSwitcher", "Open PowerSwitcher when I log in"), target: nil, action: nil)
     private let lidBox = NSButton(checkboxWithTitle: L("任务模式下，合上盖子时关闭屏幕（任务继续运行）", "Turn off the display when closing the lid in Task mode"), target: nil, action: nil)
     private let darkBox = NSButton(checkboxWithTitle: L("合盖期间保持黑屏（亮度降到 0，开盖后恢复）", "Keep the screen dark while the lid is closed"), target: nil, action: nil)
+    private let dailyTaskBox = NSButton(checkboxWithTitle: L("每天", "Every day at"), target: nil, action: nil)
+    private let dailyNormalBox = NSButton(checkboxWithTitle: L("每天", "Every day at"), target: nil, action: nil)
+    private let dailyTaskPicker = PreferencesForm.timePicker()
+    private let dailyNormalPicker = PreferencesForm.timePicker()
     private let hasLid = Lid.exists
     private let width: CGFloat
 
@@ -25,6 +29,54 @@ final class PreferencesForm: NSObject {
         lidBox.target = self
         lidBox.action = #selector(lidChanged)
         lidChanged()
+        let plan = Schedule.installed().plan
+        dailyTaskBox.state = plan.dailyTask == nil ? .off : .on
+        dailyNormalBox.state = plan.dailyNormal == nil ? .off : .on
+        set(dailyTaskPicker, plan.dailyTask ?? .taskDefault)
+        set(dailyNormalPicker, plan.dailyNormal ?? .dailyDefault)
+        for box in [dailyTaskBox, dailyNormalBox] { box.target = self; box.action = #selector(scheduleChanged) }
+        scheduleChanged()
+    }
+
+    @objc private func scheduleChanged() {
+        dailyTaskPicker.isEnabled = dailyTaskBox.state == .on
+        dailyNormalPicker.isEnabled = dailyNormalBox.state == .on
+    }
+
+    /// The daily schedule as chosen in the form; nil entries are off.
+    var dailySchedule: (task: ClockTime?, normal: ClockTime?) {
+        (dailyTaskBox.state == .on ? time(dailyTaskPicker) : nil, dailyNormalBox.state == .on ? time(dailyNormalPicker) : nil)
+    }
+
+    func scheduleView() -> NSView {
+        let grid = NSGridView(views: [
+            [dailyTaskBox, dailyTaskPicker, UI.label(L("进入任务模式", "switch to Task mode"))],
+            [dailyNormalBox, dailyNormalPicker, UI.label(L("切回日常模式", "switch to Daily mode"))],
+        ])
+        grid.rowSpacing = 8
+        grid.columnSpacing = 8
+        grid.rowAlignment = .firstBaseline
+        let note = UI.paragraph(L("到点自动切换，不用输入密码；保存时需要输入一次管理员密码。Mac 在睡眠时错过的定时，会在唤醒后执行。",
+                                  "Switches happen automatically with no password. Saving asks for your administrator password once. A time missed while your Mac sleeps runs when it wakes."),
+                                width: width, size: 11)
+        return UI.stack([grid, note], spacing: 6)
+    }
+
+    private static func timePicker() -> NSDatePicker {
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .textFieldAndStepper
+        picker.datePickerElements = .hourMinute
+        picker.locale = Locale(identifier: "en_GB")
+        return picker
+    }
+
+    private func set(_ picker: NSDatePicker, _ time: ClockTime) {
+        picker.dateValue = Calendar.current.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: Date()) ?? Date()
+    }
+
+    private func time(_ picker: NSDatePicker) -> ClockTime {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: picker.dateValue)
+        return ClockTime(hour: c.hour ?? 0, minute: c.minute ?? 0)
     }
 
     @objc private func lidChanged() { darkBox.isEnabled = lidBox.state == .on }
@@ -225,7 +277,7 @@ final class SetupAssistant: NSObject, NSWindowDelegate {
                 heading(L("提醒与启动", "Reminders & Startup")),
                 form.optionsView(),
                 UI.row(["lock"], tint: .secondaryLabelColor, title: L("每次切换都需要管理员密码", "Switching requires an administrator password"),
-                       detail: L("修改系统电源设置需要授权。PowerSwitcher 不保存密码，也不安装常驻的高权限服务。", "Power settings require authorization. PowerSwitcher never stores your password or installs a privileged background service."), width: w),
+                       detail: L("修改系统电源设置需要授权。PowerSwitcher 不保存密码，也不安装常驻的后台服务；只有设置了定时切换，才会登记到点运行的系统任务。", "Power settings require authorization. PowerSwitcher never stores your password or installs an always-running background service; scheduled switches register system jobs only when you set them up."), width: w),
             ], spacing: 18)
         default:
             let timers = form.timers
@@ -273,7 +325,7 @@ final class SetupAssistant: NSObject, NSWindowDelegate {
 }
 
 final class SettingsWindow: NSObject, NSWindowDelegate {
-    var onSave: (() -> Void)?
+    var onSave: (((task: ClockTime?, normal: ClockTime?)) -> Void)?
     var onClose: (() -> Void)?
     private let window: NSWindow
     private let form: PreferencesForm
@@ -293,6 +345,8 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
             form.timersView(),
             UI.label(L("提醒与启动", "Reminders & Startup"), weight: .semibold),
             form.optionsView(),
+            UI.label(L("每天定时切换", "Daily Schedule"), weight: .semibold),
+            form.scheduleView(),
         ], spacing: 10)
         let resetButton = NSButton(title: L("恢复默认时间", "Reset Timers"), target: self, action: #selector(resetTimers))
         let cancelButton = NSButton(title: L("取消", "Cancel"), target: self, action: #selector(cancelClicked))
@@ -342,8 +396,8 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
         if let error = form.save() {
             UI.alert(L("无法更改登录项", "Couldn't update login item"), error + L("\n\n可以稍后在“系统设置 › 通用 › 登录项”中手动添加。", "\n\nYou can add it later in System Settings › General › Login Items."), style: .warning)
         }
-        let saved = onSave
+        let saved = onSave, schedule = form.dailySchedule
         window.close()
-        saved?()
+        saved?(schedule)
     }
 }

@@ -48,6 +48,30 @@ enum SelfTest {
         check(!L10n.chinese(preferred: []), "empty language list falls back to English")
         check(L10n.chinese(preferred: ["en"], override: "zh") && !L10n.chinese(preferred: ["zh"], override: "en"), "manual language override")
         check(Format.minutes(15) == L("15 分钟", "15 min"), "localized time formatting")
+        // Scheduled jobs: generated, never installed by the self-test.
+        let end = Schedule.endTime(after: 7200, from: Date(timeIntervalSince1970: 1_800_000_030))
+        check(end.timeIntervalSince1970 == 1_800_007_200, "timer end aligned to a whole minute")
+        let morning = Schedule.next(ClockTime(hour: 8, minute: 0), after: Date())
+        check(morning > Date() && morning.timeIntervalSinceNow <= 86_400, "next 08:00 within a day")
+        let plan = Schedule.Plan(taskEnd: end, dailyTask: ClockTime(hour: 23, minute: 5), dailyNormal: ClockTime(hour: 7, minute: 30))
+        let timers = DailyTimers(ac: 20, battery: 4)
+        var jobsOK = true
+        for job in Schedule.Job.allCases {
+            guard let xml = Schedule.plist(job, plan: plan, timers: timers), let info = Schedule.parse(Data(xml.utf8)),
+                  let dict = try? PropertyListSerialization.propertyList(from: Data(xml.utf8), format: nil) as? [String: Any],
+                  dict["Label"] as? String == job.rawValue, let args = dict["ProgramArguments"] as? [String], args.count == 3 else { jobsOK = false; continue }
+            if run("/bin/sh", ["-n", "-c", args[2]]).0 != 0 { jobsOK = false }
+            switch job {
+            case .taskEnd: jobsOK = jobsOK && info.end == 1_800_007_200 && info.timers == timers && dict["RunAtLoad"] as? Bool == true
+            case .dailyTask: jobsOK = jobsOK && info.time == ClockTime(hour: 23, minute: 5) && args[2].contains("mode=task")
+            case .dailyNormal: jobsOK = jobsOK && info.time == ClockTime(hour: 7, minute: 30) && info.timers == timers && args[2].contains(Schedule.Job.taskEnd.path)
+            }
+        }
+        check(jobsOK, "scheduled job plists parse, round-trip and pass sh -n")
+        check(Schedule.plist(.taskEnd, plan: Schedule.Plan(), timers: timers) == nil, "unused scheduled job omitted")
+        let sync = Schedule.syncScript(Schedule.Plan(dailyNormal: ClockTime(hour: 8, minute: 0)), timers: timers)
+        check(run("/bin/sh", ["-n", "-c", sync]).0 == 0 && sync.contains("remove_job " + Schedule.Job.taskEnd.rawValue)
+              && sync.contains("install_job " + Schedule.Job.dailyNormal.rawValue), "schedule sync script")
         print("Backlight API: " + (Backlight.available ? "available" : "unavailable (lid dimming disabled)"))
         print("UI language: " + (L10n.isChinese ? "zh" : "en"))
         print("Application: " + Bundle.main.bundleURL.path)
