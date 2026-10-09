@@ -10,7 +10,9 @@ First public release of scheduled switches; 1.6.0 was an unreleased test build w
 - If the one-shot end is registered less than a minute before its time (or launchd fires slightly early), the job waits for the exact time instead of ending Task mode early.
 - Daily timers are baked into the jobs and re-registered when they change. A switch combined with a schedule change uses a single prompt; schedule registration only happens after the switch succeeds.
 - Docs: privacy wording now says schedules register system jobs only when set; uninstall steps for schedules; `disablesleep 0` recovery wording corrected.
-- Five new self-tests (23 total). Power switching, authorization, verification and rollback logic are unchanged.
+- Daily mode lowers `displaysleep` to the idle timer when it is longer or 0 (never): powerd keeps the Mac awake while the display is on, so the daily timer had no effect. Shorter values are left alone, Task mode never touches it, and it is verified and rolled back with the other settings. The app treats a longer display timer as not matching the preset, so "Apply configured sleep timers…" appears.
+- Scheduled job logs drop pmset's display-vs-sleep timer warnings; other output, including rollback diagnostics, is kept.
+- Six new self-tests (24 total) and three new mock tests (15 total). Authorization, verification and rollback logic are unchanged.
 
 ## 1.5.1 — 2026-10-09
 

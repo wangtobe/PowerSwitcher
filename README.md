@@ -26,7 +26,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 
 #### 日常模式 · 正常休眠
 
-闲置一段时间后自动休眠，时间你自己定。默认接电源 15 分钟，笔记本用电池 5 分钟。
+闲置一段时间后自动休眠，时间你自己定。默认接电源 15 分钟，笔记本用电池 5 分钟。屏幕亮着时 Mac 不会闲置休眠，所以如果「关闭显示器」的时间比这个长（或者是「永不」），切到日常模式时会把它调到和休眠时间一样；本来更短的不动。
 
 有两点要知道：日常模式只是「允许」Mac 休眠，如果有后台程序拦着不让睡，菜单里会告诉你是哪个。另外，切回日常模式用的是你自己设的时间，不会恢复成装这个工具之前的系统设置。
 
@@ -49,6 +49,7 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 ### 1.6.1 新增
 
 - 定时切换：任务模式定时结束、每天定时切换。详见 [1.6.1 更新说明](docs/UPDATE-1.6.1.md)。
+- 修复：「关闭显示器」时间比休眠时间长（或为「永不」）时，日常模式的休眠时间实际不生效。现在切到日常模式会把它调到和休眠时间一样。
 
 ### 1.5.1 更新
 
@@ -145,7 +146,7 @@ Your Mac won't go to sleep on its own until you switch back. On a laptop, that i
 
 #### Daily mode · Normal sleep
 
-Your Mac sleeps after sitting idle for as long as you choose. Defaults are 15 minutes on power and 5 minutes on battery.
+Your Mac sleeps after sitting idle for as long as you choose. Defaults are 15 minutes on power and 5 minutes on battery. A Mac doesn't idle sleep while its display is on, so if the "turn display off" timer is longer (or never), Daily mode lowers it to match the sleep timer. Shorter display timers are left alone.
 
 Two things worth knowing. Daily mode only *allows* sleep: if a background app is keeping your Mac awake, the menu tells you which one. And switching back uses the timers you picked, not whatever your settings were before you installed PowerSwitcher.
 
@@ -168,6 +169,7 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 ### New in 1.6.1
 
 - Scheduled switches: a timer for Task mode, and a daily schedule. See the [1.6.1 update notes](docs/UPDATE-1.6.1.md).
+- Fix: Daily mode's sleep timer had no effect when the display timer was longer or set to never. Daily mode now lowers the display timer to match.
 
 ### New in 1.5.1
 

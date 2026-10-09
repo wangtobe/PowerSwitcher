@@ -39,7 +39,7 @@ def main():
         shutil.copyfile(ROOT / 'Assets/PowerIcon.icns', contents / 'Resources/PowerIcon.icns')
         info = dict(CFBundleExecutable='PowerSwitcher', CFBundleIdentifier='org.powerswitcher.app',
                     CFBundleName='PowerSwitcher', CFBundleDisplayName='PowerSwitcher', CFBundleDevelopmentRegion='en', CFBundleLocalizations=['en', 'zh-Hans', 'zh-Hant'], CFBundlePackageType='APPL',
-                    NSHumanReadableCopyright='© 2026 Tobe Wang & contributors', CFBundleShortVersionString=VERSION, CFBundleVersion='11', CFBundleIconFile='PowerIcon',
+                    NSHumanReadableCopyright='© 2026 Tobe Wang & contributors', CFBundleShortVersionString=VERSION, CFBundleVersion='12', CFBundleIconFile='PowerIcon',
                     LSMinimumSystemVersion='13.0', LSUIElement=True, NSHighResolutionCapable=True)
         (contents / 'Info.plist').write_bytes(plistlib.dumps(info))
         identity = os.environ.get('SIGNING_IDENTITY', '-')

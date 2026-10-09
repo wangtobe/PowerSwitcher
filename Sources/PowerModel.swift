@@ -58,10 +58,16 @@ struct PowerSnapshot {
 
     func idleMinutes(_ section: String) -> Int? { profiles[section]?["sleep"] }
 
-    /// Whether the live idle timers equal the user's daily preset (only for profiles this Mac reports).
+    /// Whether the live idle timers equal the user's daily preset (only for profiles this Mac reports),
+    /// with no display timer longer than the idle timer: power.sh lowers those in Daily mode.
     func matches(_ timers: DailyTimers) -> Bool {
         let expected = [("AC Power", timers.ac), ("UPS Power", timers.ac), ("Battery Power", timers.battery)]
-        return expected.allSatisfy { section, minutes in idleMinutes(section).map { $0 == minutes } ?? true }
+        return expected.allSatisfy { section, minutes in
+            guard let idle = idleMinutes(section) else { return true }
+            guard idle == minutes else { return false }
+            guard let display = profiles[section]?["displaysleep"] else { return true }
+            return display != 0 && display <= minutes
+        }
     }
 
     static func read() -> PowerSnapshot {

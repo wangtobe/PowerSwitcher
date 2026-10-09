@@ -193,10 +193,14 @@ enum Schedule {
     private static func body(_ name: String, _ mode: PowerMode, timers: DailyTimers) -> String {
         """
         echo "$(/bin/date '+%Y-%m-%d %H:%M:%S') \(name): switching to \(mode.rawValue)"
+        out=$(/usr/bin/mktemp)
         (
         \(PowerCommand.script(for: mode, timers: timers))
-        )
+        ) >"$out" 2>&1
         rc=$?
+        # pmset's advice about display vs. sleep timers is noise here (Task mode disables sleep anyway).
+        /usr/bin/grep -v -e 'may not behave as expected' -e 'should have a lower timeout than system sleep' "$out"
+        /bin/rm -f "$out"
         echo "$(/bin/date '+%Y-%m-%d %H:%M:%S') \(name): exit $rc"
         """
     }

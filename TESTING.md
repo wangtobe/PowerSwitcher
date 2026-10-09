@@ -19,6 +19,14 @@ The generated sync script and job scripts were run with `/Library` paths redirec
 - a failing pmset call inside a job rolls back and exits non-zero.
 - an end registered less than a minute ahead waits until the end time, then switches (added after the user's hands-on test, see below).
 
+## Display timer alignment (build 12)
+
+- Reported Mac: Battery displaysleep 0 / sleep 1, AC displaysleep 10 / sleep 5. pmset warned on every Daily switch, and powerd's "Prevent sleep while display is on" assertion means idle sleep waits for the display.
+- power.sh now lowers displaysleep to the idle timer in Daily mode when it is longer or 0. Mock tests added: lowers 10→5 and 0→4, keeps a shorter 3; Task mode keeps 30 and 0; a failure restores displaysleep. **15/15 PASS**.
+- Self-tests: **24/24 PASS** (native and Rosetta), including a longer display timer counting as not matching the preset.
+- Schedule sandbox: **14/14 PASS**. A first attempt captured job output with `$( … )`, which broke on power.sh's `case` patterns; the self-test and sandbox caught it before delivery, and output now goes through a temp file. With a pmset mock that prints the display warnings, the job log keeps only the start and exit lines.
+- Not done by the assistant: a real Daily switch on the reported Mac.
+
 ## Hands-on check by the user (1.6.1 build 10)
 
 - Three Task mode timers set with "Custom Time…" each switched back to Daily mode (schedule log: exit 0 at 20:33:33, 20:36:17, 20:41:04). Their non-zero seconds suggest they ran at registration rather than on the calendar trigger: either the end had already passed while the password was typed (expected catch-up) or it was less than 60 s away, which the old 60 s tolerance ran immediately. Build 11 waits for the exact time instead.

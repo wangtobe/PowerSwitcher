@@ -29,6 +29,12 @@ enum SelfTest {
         var snapshot = PowerSnapshot()
         snapshot.profiles = profiles
         check(snapshot.matches(DailyTimers(ac: 15, battery: 5)) && !snapshot.matches(DailyTimers(ac: 30, battery: 5)), "preset comparison")
+        var display = PowerSnapshot()
+        display.profiles = PowerSnapshot.parseProfiles("AC Power:\n displaysleep         10\n sleep                5\nBattery Power:\n displaysleep         0\n sleep                5\n")
+        var shorter = display
+        shorter.profiles["AC Power"]?["displaysleep"] = 3
+        shorter.profiles["Battery Power"]?["displaysleep"] = 5
+        check(!display.matches(DailyTimers(ac: 5, battery: 5)) && shorter.matches(DailyTimers(ac: 5, battery: 5)), "display timer longer than idle timer needs updating")
 
         let assertions = """
         Listed by owning process:

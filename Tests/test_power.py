@@ -75,6 +75,20 @@ class PowerTests(unittest.TestCase):
   for timers in ('daily_ac=0\n','daily_ac=181\n','daily_battery=abc\n','daily_ac=-5\n'):
    r,s=self.execute({'profiles':{'AC Power':{'sleep':7}},'disabled':0},timers=timers)
    self.assertEqual(r.returncode,2,timers);self.assertNotIn('calls',s,timers)
+ def test_daily_lowers_longer_display_sleep(self):
+  state={'profiles':{'AC Power':{'sleep':0,'displaysleep':10},'Battery Power':{'sleep':1,'displaysleep':0},'UPS Power':{'sleep':0,'displaysleep':3}},'disabled':1}
+  r,s=self.execute(state,timers='daily_ac=5\ndaily_battery=4\n');self.assertEqual(r.returncode,0,r.stderr)
+  self.assertEqual(s['profiles']['AC Power'],{'sleep':5,'displaysleep':5})
+  self.assertEqual(s['profiles']['Battery Power'],{'sleep':4,'displaysleep':4})
+  self.assertEqual(s['profiles']['UPS Power'],{'sleep':5,'displaysleep':3})
+ def test_task_mode_keeps_display_sleep(self):
+  state={'profiles':{'AC Power':{'sleep':15,'displaysleep':30},'Battery Power':{'sleep':5,'displaysleep':0}},'disabled':0}
+  r,s=self.execute(state,'task');self.assertEqual(r.returncode,0,r.stderr)
+  self.assertEqual(s['profiles'],{'AC Power':{'sleep':0,'displaysleep':30},'Battery Power':{'sleep':1,'displaysleep':0}})
+ def test_failure_restores_display_sleep(self):
+  initial={'profiles':{'AC Power':{'sleep':0,'displaysleep':10},'Battery Power':{'sleep':1,'displaysleep':0}},'disabled':1,'fail':2}
+  r,s=self.execute(initial);self.assertNotEqual(r.returncode,0)
+  self.assertEqual(s['profiles'],initial['profiles']);self.assertEqual(s['disabled'],1)
  def test_generated_swift_embeds_script_once(self):
   spec=importlib.util.spec_from_file_location('build',ROOT/'Scripts/build.py');build=importlib.util.module_from_spec(spec);spec.loader.exec_module(build)
   with tempfile.TemporaryDirectory() as d:
