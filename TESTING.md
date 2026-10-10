@@ -12,6 +12,10 @@
 - Registering Task mode plus boot-restore through `osascript … do shell script` in the sandbox: exit 0, plists pass `plutil -lint`, and after a simulated restart the job restored Task mode.
 - Settings rendered offscreen in Chinese and English; it read the user's real registered schedule (08:00 / 20:30).
 
+## Daily window applied on update (build 16)
+
+- Hands-on with build 15: the 09:00–21:30 window was registered at 14:28 through "Update Scheduled Switches…" (the times had been saved with build 14), and the Mac stayed in Daily mode. Only a changed window in Settings aligned the mode. Build 16 aligns to the window on any Settings save and on "Update Scheduled Switches…". Self-tests 27/27; this path is UI logic and was not exercised by the assistant.
+
 ## Daily window (build 15)
 
 - Reported by the user: setting 09:00–21:00 at 14:00 left Daily mode until 21:00.

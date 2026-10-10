@@ -39,7 +39,7 @@
 
 现在两项都开时，两个时间之间就是任务模式，其余时间是日常模式：
 
-- **保存设置时**：如果当前时间落在另一种模式的时间段，会在同一次密码授权里直接切过去，并提示「已按每天定时切到…」。
+- **保存设置或更新定时任务时**：如果当前模式和时间段对不上，会在同一次密码授权里直接切过去，并提示「已按每天定时切到…」。用「任务模式，定时结束」手动指定时不受影响。
 - **唤醒后**：错过的定时补跑时，先看当前时间属于哪一段，所以不管补跑顺序如何，都会停在正确的模式。
 - **开机后**：按当前时间段切到对应模式。这条优先于「重启后恢复重启前的模式」。
 - 时间段可以跨午夜，比如 23:00 进入任务模式、08:00 切回日常模式。
@@ -89,7 +89,7 @@ A daily schedule used to switch only at its two times. Set "Task mode at 09:00, 
 
 With both times on, Task mode now runs between them and Daily mode the rest of the day:
 
-- **When you save**: if the current time belongs to the other mode, PowerSwitcher switches under the same password prompt and says "Switched by the daily schedule to …".
+- **When you save Settings or update scheduled switches**: if the current mode doesn't match the window, PowerSwitcher switches under the same password prompt and says "Switched by the daily schedule to …". A Task mode timer you pick by hand is left alone.
 - **After waking**: late fires check which window the current time is in, so they end in the right mode whatever order they run in.
 - **After startup**: the Mac switches to the mode for the current time. This takes priority over "Keep the same mode after a restart".
 - Windows can wrap past midnight, e.g. Task mode at 23:00, Daily mode at 08:00.
