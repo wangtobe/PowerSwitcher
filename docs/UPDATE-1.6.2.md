@@ -20,7 +20,7 @@
 ### 现在怎么处理
 
 - **自动识别：** PowerSwitcher 打开后，如果发现任务模式被重启取消了，会弹出提示，菜单栏图标变成警告标志，菜单里出现「恢复任务模式…」和「切回日常模式…」，点哪个都需要输一次密码。
-- **可选自动恢复：** 在「设置…」的「定时切换」里，新增「重启后自动恢复任务模式」。开启后，如果重启前在任务模式，开机后会自动恢复，不用输密码。
+- **可选自动恢复：** 在「设置…」的「定时切换」里，新增「重启后恢复重启前的模式」。开启后，重启前在任务模式，开机后会自动恢复，不用输密码；重启前在日常模式，就保持日常模式（日常模式本来就不受重启影响）。
   - 默认关闭。开启时需要输一次管理员密码，原理和定时切换一样，会登记一个系统任务（`org.powerswitcher.schedule.boot-restore`）。
   - 它只在开机后 15 分钟内动作，而且只在确认任务模式确实被重启取消时才恢复。之后再开启这个选项，不会立刻切到任务模式。
   - 执行记录同样写在 `/Library/Logs/PowerSwitcher-schedule.log`。
@@ -56,7 +56,7 @@ PowerSwitcher used to just show Daily mode with timers that didn't match your se
 ### What happens now
 
 - **Detection:** when PowerSwitcher opens and finds that a restart cleared Task mode, it shows a notice, the menu bar icon turns into a warning sign, and the menu offers "Restore Task Mode…" and "Switch to Daily Mode…". Either one asks for your password once.
-- **Optional automatic restore:** under "Scheduled Switches" in Settings, there's a new "Restore Task mode after a restart" option. With it on, if Task mode was on before a restart, it comes back after startup with no password.
+- **Optional automatic restore:** under "Scheduled Switches" in Settings, there's a new "Keep the same mode after a restart" option. With it on, if Task mode was on before a restart, it comes back after startup with no password; if Daily mode was on, it stays that way (Daily mode isn't affected by a restart).
   - It's off by default. Turning it on asks for your administrator password once and registers a system job (`org.powerswitcher.schedule.boot-restore`), the same way scheduled switches work.
   - It only acts within 15 minutes of startup, and only when it can tell that a restart cleared Task mode. Turning the option on later never switches to Task mode on the spot.
   - It logs to `/Library/Logs/PowerSwitcher-schedule.log` like the other jobs.

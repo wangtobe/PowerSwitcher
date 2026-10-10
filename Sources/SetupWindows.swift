@@ -14,7 +14,7 @@ final class PreferencesForm: NSObject {
     private let dailyNormalBox = NSButton(checkboxWithTitle: L("每天", "Every day at"), target: nil, action: nil)
     private let dailyTaskPicker = PreferencesForm.timePicker()
     private let dailyNormalPicker = PreferencesForm.timePicker()
-    private let restoreBox = NSButton(checkboxWithTitle: L("重启后自动恢复任务模式", "Restore Task mode after a restart"), target: nil, action: nil)
+    private let restoreBox = NSButton(checkboxWithTitle: L("重启后恢复重启前的模式", "Keep the same mode after a restart"), target: nil, action: nil)
     private let hasLid = Lid.exists
     private let width: CGFloat
 
@@ -64,8 +64,8 @@ final class PreferencesForm: NSObject {
         let note = UI.paragraph(L("到点自动切换，不用输入密码；保存时需要输入一次管理员密码。Mac 在睡眠时错过的定时，会在唤醒后执行。",
                                   "Switches happen automatically with no password. Saving asks for your administrator password once. A time missed while your Mac sleeps runs when it wakes."),
                                 width: width, size: 11)
-        let restoreNote = UI.paragraph(L("重启会让系统取消任务模式。开启后，如果重启前处于任务模式，开机后会自动恢复，不用输入密码。",
-                                         "A restart turns Task mode off. With this on, Task mode comes back on its own after startup if it was on before, with no password."),
+        let restoreNote = UI.paragraph(L("日常模式重启后本来就会保持；任务模式会被系统取消。开启后，重启前在任务模式的话，开机后会自动恢复，不用输入密码。",
+                                         "Daily mode survives a restart on its own, but a restart turns Task mode off. With this on, Task mode comes back after startup if it was on before, with no password."),
                                        width: width, size: 11)
         return UI.stack([grid, note, restoreBox, restoreNote], spacing: 6)
     }

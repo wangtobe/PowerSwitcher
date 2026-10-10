@@ -51,11 +51,11 @@ Mac 不会自动休眠，一直到你切回来。笔记本用电池的时候也�
 重启会让 macOS 取消任务模式，但休眠时间会停留在任务模式的设置（接电源永不休眠，电池 1 分钟），变成一种半任务模式的状态。
 
 - PowerSwitcher 打开后会识别出这种情况，弹出提示，菜单里会出现「恢复任务模式…」和「切回日常模式…」。
-- 也可以在「设置…」里开启「重启后自动恢复任务模式」：重启前在任务模式，开机后会自动恢复，不用输密码。这个选项默认关闭，开启时需要输一次管理员密码，原理和定时切换一样。
+- 也可以在「设置…」里开启「重启后恢复重启前的模式」：重启前在任务模式，开机后会自动恢复，不用输密码；重启前在日常模式，就保持日常模式，什么都不改。这个选项默认关闭，开启时需要输一次管理员密码，原理和定时切换一样。
 
 ### 1.6.2 更新
 
-- 识别被重启取消的任务模式，提示并提供恢复；新增「重启后自动恢复任务模式」选项。详见 [1.6.2 更新说明](docs/UPDATE-1.6.2.md)。
+- 识别被重启取消的任务模式，提示并提供恢复；新增「重启后恢复重启前的模式」选项。详见 [1.6.2 更新说明](docs/UPDATE-1.6.2.md)。
 
 ### 1.6.1 新增
 
@@ -182,11 +182,11 @@ Two things worth knowing. Daily mode only *allows* sleep: if a background app is
 A restart makes macOS turn Task mode off, but the sleep timers stay at Task mode's values (never on power, 1 minute on battery), leaving your Mac half in Task mode.
 
 - When PowerSwitcher opens, it recognizes this, shows a notice, and offers "Restore Task Mode…" and "Switch to Daily Mode…" in the menu.
-- Or turn on "Restore Task mode after a restart" in Settings: if Task mode was on before a restart, it comes back after startup with no password. It's off by default; turning it on asks for your administrator password once, the same way scheduled switches do.
+- Or turn on "Keep the same mode after a restart" in Settings: if Task mode was on before a restart, it comes back after startup with no password; if Daily mode was on, nothing changes. It's off by default; turning it on asks for your administrator password once, the same way scheduled switches do.
 
 ### New in 1.6.2
 
-- Recognizes Task mode cleared by a restart and offers to restore it; new "Restore Task mode after a restart" option. See the [1.6.2 update notes](docs/UPDATE-1.6.2.md).
+- Recognizes Task mode cleared by a restart and offers to restore it; new "Keep the same mode after a restart" option. See the [1.6.2 update notes](docs/UPDATE-1.6.2.md).
 
 ### New in 1.6.1
 
