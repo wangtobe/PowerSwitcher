@@ -56,6 +56,10 @@ struct PowerSnapshot {
     /// AC idle timer; UPS-only Macs report their timer under "UPS Power".
     var acIdleMinutes: Int? { idleMinutes("AC Power") ?? idleMinutes("UPS Power") }
 
+    /// A restart clears the global SleepDisabled flag but keeps Task mode's idle timers: sleep is allowed while a
+    /// power-adapter profile still says never (0), which Daily mode never sets.
+    var looksLikeInterruptedTask: Bool { mode == .normal && ["AC Power", "UPS Power"].contains { idleMinutes($0) == 0 } }
+
     func idleMinutes(_ section: String) -> Int? { profiles[section]?["sleep"] }
 
     /// Whether the live idle timers equal the user's daily preset (only for profiles this Mac reports),

@@ -14,6 +14,7 @@ final class PreferencesForm: NSObject {
     private let dailyNormalBox = NSButton(checkboxWithTitle: L("每天", "Every day at"), target: nil, action: nil)
     private let dailyTaskPicker = PreferencesForm.timePicker()
     private let dailyNormalPicker = PreferencesForm.timePicker()
+    private let restoreBox = NSButton(checkboxWithTitle: L("重启后自动恢复任务模式", "Restore Task mode after a restart"), target: nil, action: nil)
     private let hasLid = Lid.exists
     private let width: CGFloat
 
@@ -34,6 +35,7 @@ final class PreferencesForm: NSObject {
         dailyNormalBox.state = plan.dailyNormal == nil ? .off : .on
         set(dailyTaskPicker, plan.dailyTask ?? .taskDefault)
         set(dailyNormalPicker, plan.dailyNormal ?? .dailyDefault)
+        restoreBox.state = plan.restoreAfterRestart ? .on : .off
         for box in [dailyTaskBox, dailyNormalBox] { box.target = self; box.action = #selector(scheduleChanged) }
         scheduleChanged()
     }
@@ -43,9 +45,12 @@ final class PreferencesForm: NSObject {
         dailyNormalPicker.isEnabled = dailyNormalBox.state == .on
     }
 
-    /// The daily schedule as chosen in the form; nil entries are off.
-    var dailySchedule: (task: ClockTime?, normal: ClockTime?) {
-        (dailyTaskBox.state == .on ? time(dailyTaskPicker) : nil, dailyNormalBox.state == .on ? time(dailyNormalPicker) : nil)
+    /// The scheduled switches as chosen in the form; nil times are off.
+    var scheduleChoice: Schedule.Plan {
+        Schedule.Plan(taskEnd: nil,
+                      dailyTask: dailyTaskBox.state == .on ? time(dailyTaskPicker) : nil,
+                      dailyNormal: dailyNormalBox.state == .on ? time(dailyNormalPicker) : nil,
+                      restoreAfterRestart: restoreBox.state == .on)
     }
 
     func scheduleView() -> NSView {
@@ -59,7 +64,10 @@ final class PreferencesForm: NSObject {
         let note = UI.paragraph(L("到点自动切换，不用输入密码；保存时需要输入一次管理员密码。Mac 在睡眠时错过的定时，会在唤醒后执行。",
                                   "Switches happen automatically with no password. Saving asks for your administrator password once. A time missed while your Mac sleeps runs when it wakes."),
                                 width: width, size: 11)
-        return UI.stack([grid, note], spacing: 6)
+        let restoreNote = UI.paragraph(L("重启会让系统取消任务模式。开启后，如果重启前处于任务模式，开机后会自动恢复，不用输入密码。",
+                                         "A restart turns Task mode off. With this on, Task mode comes back on its own after startup if it was on before, with no password."),
+                                       width: width, size: 11)
+        return UI.stack([grid, note, restoreBox, restoreNote], spacing: 6)
     }
 
     private static func timePicker() -> NSDatePicker {
@@ -325,7 +333,7 @@ final class SetupAssistant: NSObject, NSWindowDelegate {
 }
 
 final class SettingsWindow: NSObject, NSWindowDelegate {
-    var onSave: (((task: ClockTime?, normal: ClockTime?)) -> Void)?
+    var onSave: ((Schedule.Plan) -> Void)?
     var onClose: (() -> Void)?
     private let window: NSWindow
     private let form: PreferencesForm
@@ -345,7 +353,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
             form.timersView(),
             UI.label(L("提醒与启动", "Reminders & Startup"), weight: .semibold),
             form.optionsView(),
-            UI.label(L("每天定时切换", "Daily Schedule"), weight: .semibold),
+            UI.label(L("定时切换", "Scheduled Switches"), weight: .semibold),
             form.scheduleView(),
         ], spacing: 10)
         let resetButton = NSButton(title: L("恢复默认时间", "Reset Timers"), target: self, action: #selector(resetTimers))
@@ -396,7 +404,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
         if let error = form.save() {
             UI.alert(L("无法更改登录项", "Couldn't update login item"), error + L("\n\n可以稍后在“系统设置 › 通用 › 登录项”中手动添加。", "\n\nYou can add it later in System Settings › General › Login Items."), style: .warning)
         }
-        let saved = onSave, schedule = form.dailySchedule
+        let saved = onSave, schedule = form.scheduleChoice
         window.close()
         saved?(schedule)
     }

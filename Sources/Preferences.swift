@@ -42,6 +42,12 @@ enum Preferences {
         get { (store.object(forKey: "displayOffOnLidClose") as? Bool) ?? true }
         set { store.set(newValue, forKey: "displayOffOnLidClose") }
     }
+    /// The last mode seen while not interrupted, to tell a restart that cleared Task mode from a deliberate switch.
+    static var lastSeenTask: Bool {
+        // Unknown counts as Task mode, so a restart that happened before this was recorded is still caught.
+        get { (store.object(forKey: "lastSeenTask") as? Bool) ?? true }
+        set { store.set(newValue, forKey: "lastSeenTask") }
+    }
     /// Hold the built-in brightness at zero while the lid is shut, for apps that wake the display again.
     static var keepDarkOnLidClose: Bool {
         get { (store.object(forKey: "keepDarkOnLidClose") as? Bool) ?? true }

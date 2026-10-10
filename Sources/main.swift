@@ -5,7 +5,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let menu = NSMenu()
     private let card = StatusCardView()
     private let blockersMenu = NSMenu()
-    private var blockersItem: NSMenuItem!, applyTimersItem: NSMenuItem!, lastSleepItem: NSMenuItem!
+    private var blockersItem: NSMenuItem!, applyTimersItem: NSMenuItem!, lastSleepItem: NSMenuItem!, restoreTaskItem: NSMenuItem!
+    /// Task mode was cleared by a restart; the restart notice is shown once per launch.
+    private var taskInterrupted = false, interruptNoticeShown = false
     private var dailyItem: NSMenuItem!, taskItem: NSMenuItem!, sleepItem: NSMenuItem!, timedItem: NSMenuItem!
     private let timedMenu = NSMenu()
     /// Scheduled jobs registered in /Library/LaunchDaemons, re-read on every render.
@@ -81,6 +83,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         blockersItem.image = symbol(["exclamationmark.triangle"], L("阻止休眠", "Sleep blockers"))
         blockersItem.submenu = blockersMenu
         menu.addItem(blockersItem)
+        restoreTaskItem = addItem(L("恢复任务模式…", "Restore Task Mode…"), #selector(chooseTask), symbols: PowerMode.task.symbols)
+        restoreTaskItem.isHidden = true
         applyTimersItem = addItem(L("更新为设定的休眠时间…", "Apply configured sleep timers…"), #selector(applyTimers), symbols: ["arrow.triangle.2.circlepath"])
         lastSleepItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         lastSleepItem.image = symbol(["clock"], L("上次实际休眠", "Last recorded sleep"))
@@ -180,6 +184,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         sleepItem.title = mode == .task ? L("切回日常模式并立即休眠…", "Switch to Daily Mode and Sleep…") : L("立即休眠…", "Sleep Now…")
         blockersItem.isHidden = true
         applyTimersItem.isHidden = true
+        restoreTaskItem.isHidden = true
+        restoreTaskItem.isEnabled = idle
         lastSleepItem.title = lastSleepText()
 
         let icon: [String], label: String
@@ -203,18 +209,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 label = mode.title + (onBattery ? L("（电池供电）", " (on battery)") : "")
             case .normal:
                 let matches = s.matches(Preferences.timers)
+                taskInterrupted = Preferences.lastSeenTask && s.looksLikeInterruptedTask
+                if taskInterrupted {
+                    lines.append(L("重启后，任务模式被系统取消了，但休眠时间还停留在任务模式的设置。可以恢复任务模式，或切回日常模式。",
+                                   "A restart turned Task mode off, but the sleep timers are still Task mode's. Restore Task mode, or switch to Daily mode."))
+                }
                 lines.append(Format.timers(ac: s.acIdleMinutes, battery: s.idleMinutes("Battery Power")) + (matches ? L("。", ".") : L("（与设定不同）。", " (different from your preferences).")))
                 if let source = Format.source(s) { lines.append(source) }
-                icon = mode.symbols
-                label = mode.title
+                icon = taskInterrupted ? ["exclamationmark.triangle"] : mode.symbols
+                label = taskInterrupted ? L("任务模式被重启取消", "Task mode cleared by restart") : mode.title
                 renderBlockers(s)
-                applyTimersItem.isHidden = matches || !Preferences.setupCompleted
+                restoreTaskItem.isHidden = !taskInterrupted
+                applyTimersItem.title = taskInterrupted ? L("切回日常模式…", "Switch to Daily Mode…") : L("更新为设定的休眠时间…", "Apply configured sleep timers…")
+                applyTimersItem.isHidden = (matches && !taskInterrupted) || !Preferences.setupCompleted
                 applyTimersItem.toolTip = L("设定：", "Configured: ") + Format.timers(Preferences.timers, hasBattery: s.hasBattery)
+                if !taskInterrupted { Preferences.lastSeenTask = false }
             }
+            if mode == .task { taskInterrupted = false; Preferences.lastSeenTask = true }
             if schedule.isStale {
                 lines.append(L("定时任务是旧版本登记的，请在“任务模式，定时结束”里更新。", "Scheduled switches were set up by an older version. Update them under “Task Mode for…”."))
             }
-            card.update(symbols: mode.symbols, tint: tint(mode, s), title: mode.title, detail: lines.joined(separator: "\n"))
+            card.update(symbols: taskInterrupted ? ["exclamationmark.triangle"] : mode.symbols, tint: taskInterrupted ? .systemOrange : tint(mode, s),
+                        title: taskInterrupted ? L("任务模式被重启取消了", "Task mode was cleared by a restart") : mode.title, detail: lines.joined(separator: "\n"))
+            if taskInterrupted, !interruptNoticeShown, statusItem.button != nil {
+                interruptNoticeShown = true
+                feedback.show(["exclamationmark.triangle"], tint: .systemOrange, title: L("任务模式被重启取消了", "Task mode was cleared by a restart"),
+                              detail: L("点菜单栏图标，可以恢复任务模式或切回日常模式。", "Open the menu to restore Task mode or switch to Daily mode."), from: statusItem.button)
+            }
         } else {
             card.update(symbols: ["questionmark.circle"], tint: .secondaryLabelColor, title: snapshot == nil ? L("正在读取电源状态…", "Reading power status…") : L("无法读取电源状态", "Couldn't read power status"),
                         detail: snapshot == nil ? "" : L("pmset 没有返回可识别的结果。可在“更多 › 详细电源信息”中查看原始输出。", "pmset returned no recognizable status. See More › Detailed Power Information for the raw output."))
@@ -589,17 +610,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func showSettings() {
         if let window = settingsWindow { window.show(); return }
         let window = SettingsWindow(snapshot: snapshot)
-        window.onSave = { [weak self] daily in self?.settingsSaved(daily) }
+        window.onSave = { [weak self] choice in self?.settingsSaved(choice) }
         window.onClose = { [weak self] in DispatchQueue.main.async { [weak self] in self?.settingsWindow = nil } }
         settingsWindow = window
         window.show()
     }
 
-    private func settingsSaved(_ daily: (task: ClockTime?, normal: ClockTime?)) {
+    private func settingsSaved(_ choice: Schedule.Plan) {
         // Jobs returning to Daily mode carry the daily timers, so they are re-registered when the timers change.
         var plan = schedule.plan
-        plan.dailyTask = daily.task
-        plan.dailyNormal = daily.normal
+        plan.dailyTask = choice.dailyTask
+        plan.dailyNormal = choice.dailyNormal
+        plan.restoreAfterRestart = choice.restoreAfterRestart
         let returnsToDaily = plan.taskEnd != nil || plan.dailyNormal != nil
         let needsSync = plan != schedule.plan || schedule.isStale || (returnsToDaily && schedule.timers != Preferences.timers.clamped)
         readSnapshot { s in
@@ -613,7 +635,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 if response == .alertFirstButtonReturn { self.switchTo(.normal, plan: needsSync ? plan : nil); return }
             }
             if needsSync {
-                self.updateSchedule(plan, done: plan.dailyTask == nil && plan.dailyNormal == nil ? L("已关闭每天定时切换", "Daily schedule turned off") : L("每天定时切换已更新", "Daily schedule updated"))
+                self.updateSchedule(plan, done: plan.isEmpty ? L("已关闭定时切换", "Scheduled switches turned off") : L("定时切换已更新", "Scheduled switches updated"))
             } else if !timersPending {
                 self.feedback.show(["checkmark.circle"], tint: .systemGreen, title: L("设置已保存", "Settings Saved"),
                                    detail: s.mode == .task ? L("新的休眠时间会在切回日常模式时生效。", "New sleep timers will apply when you return to Daily mode.") : nil, from: self.statusItem.button)

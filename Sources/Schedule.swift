@@ -24,14 +24,17 @@ enum Schedule {
         var dailyTask: ClockTime?
         /// Every day: return to Daily mode.
         var dailyNormal: ClockTime?
+        /// At startup: re-enable Task mode when a restart cleared it.
+        var restoreAfterRestart = false
 
-        var isEmpty: Bool { taskEnd == nil && dailyTask == nil && dailyNormal == nil }
+        var isEmpty: Bool { taskEnd == nil && dailyTask == nil && dailyNormal == nil && !restoreAfterRestart }
     }
 
     enum Job: String, CaseIterable {
         case taskEnd = "org.powerswitcher.schedule.task-end"
         case dailyTask = "org.powerswitcher.schedule.daily-task"
         case dailyNormal = "org.powerswitcher.schedule.daily-normal"
+        case bootRestore = "org.powerswitcher.schedule.boot-restore"
 
         var path: String { "/Library/LaunchDaemons/\(rawValue).plist" }
     }
@@ -72,8 +75,10 @@ enum Schedule {
                 result.plan.dailyTask = info.time
             case .dailyNormal:
                 result.plan.dailyNormal = info.time
+            case .bootRestore:
+                result.plan.restoreAfterRestart = true
             }
-            if job != .dailyTask, let timers = info.timers { result.timers = timers }
+            if job == .taskEnd || job == .dailyNormal, let timers = info.timers { result.timers = timers }
             if info.revision != revision { result.isStale = true }
         }
         return result
@@ -150,7 +155,7 @@ enum Schedule {
     static func plist(_ job: Job, plan: Plan, timers: DailyTimers, calendar: Calendar = .current) -> String? {
         let t = timers.clamped
         var env = [acKey: String(t.ac), batteryKey: String(t.battery)]
-        var interval: [String: Int]
+        var interval: [String: Int]?
         var runAtLoad = false
         let script: String
         switch job {
@@ -187,19 +192,36 @@ enum Schedule {
             /bin/rm -f \(Job.taskEnd.path)
             exit $rc
             """
+        case .bootRestore:
+            guard plan.restoreAfterRestart else { return nil }
+            // A restart clears the global SleepDisabled flag but keeps Task mode's idle timers, so a profile left at
+            // "never" (0, which Daily mode never sets) with sleep allowed means Task mode was interrupted.
+            // Runs at load only and acts only shortly after startup, not when the option is turned on.
+            runAtLoad = true
+            script = """
+            now=$(/bin/date +%s)
+            boot=$(/usr/sbin/sysctl -n kern.boottime | /usr/bin/sed -E 's/^\\{ sec = ([0-9]+),.*$/\\1/')
+            [ $((now - boot)) -lt 900 ] || exit 0
+            n=0
+            until /usr/bin/pmset -g >/dev/null 2>&1; do n=$((n + 1)); [ "$n" -lt 60 ] || exit 1; /bin/sleep 1; done
+            [ "$(/usr/bin/pmset -g | /usr/bin/awk '$1=="SleepDisabled" {print $2; f=1} END {if (!f) print 0}')" = 0 ] || exit 0
+            /usr/bin/pmset -g custom | /usr/bin/awk '/^[^ \t].*:$/ {a=($0=="AC Power:" || $0=="UPS Power:")} a && $1=="sleep" && $2=="0" {f=1} END {exit !f}' || exit 0
+            \(body("boot-restore", .task, timers: t))
+            exit $rc
+            """
         }
-        if job == .dailyTask { env = [:] }
+        if job == .dailyTask || job == .bootRestore { env = [:] }
         env[revisionKey] = revision
         var dict: [String: Any] = [
             "Label": job.rawValue,
             "ProgramArguments": ["/bin/sh", "-c", script],
-            "StartCalendarInterval": interval,
             "RunAtLoad": runAtLoad,
             "StandardOutPath": log,
             "StandardErrorPath": log,
             "AssociatedBundleIdentifiers": [Bundle.main.bundleIdentifier ?? "org.powerswitcher.app"],
         ]
         dict["EnvironmentVariables"] = env
+        if let interval { dict["StartCalendarInterval"] = interval }
         guard let data = try? PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0) else { return nil }
         return String(data: data, encoding: .utf8)
     }

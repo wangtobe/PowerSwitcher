@@ -35,6 +35,14 @@ enum SelfTest {
         shorter.profiles["AC Power"]?["displaysleep"] = 3
         shorter.profiles["Battery Power"]?["displaysleep"] = 5
         check(!display.matches(DailyTimers(ac: 5, battery: 5)) && shorter.matches(DailyTimers(ac: 5, battery: 5)), "display timer longer than idle timer needs updating")
+        var restarted = PowerSnapshot()
+        restarted.mode = .normal
+        restarted.profiles = ["AC Power": ["sleep": 0], "Battery Power": ["sleep": 1]]
+        var daily = restarted
+        daily.profiles = ["AC Power": ["sleep": 15], "Battery Power": ["sleep": 1]]
+        var task = restarted
+        task.mode = .task
+        check(restarted.looksLikeInterruptedTask && !daily.looksLikeInterruptedTask && !task.looksLikeInterruptedTask, "Task mode cleared by a restart recognized")
 
         let assertions = """
         Listed by owning process:
@@ -59,7 +67,7 @@ enum SelfTest {
         check(end.timeIntervalSince1970 == 1_800_007_200, "timer end aligned to a whole minute")
         let morning = Schedule.next(ClockTime(hour: 8, minute: 0), after: Date())
         check(morning > Date() && morning.timeIntervalSinceNow <= 86_400, "next 08:00 within a day")
-        let plan = Schedule.Plan(taskEnd: end, dailyTask: ClockTime(hour: 23, minute: 5), dailyNormal: ClockTime(hour: 7, minute: 30))
+        let plan = Schedule.Plan(taskEnd: end, dailyTask: ClockTime(hour: 23, minute: 5), dailyNormal: ClockTime(hour: 7, minute: 30), restoreAfterRestart: true)
         let timers = DailyTimers(ac: 20, battery: 4)
         var jobsOK = true
         for job in Schedule.Job.allCases {
@@ -71,6 +79,7 @@ enum SelfTest {
             case .taskEnd: jobsOK = jobsOK && info.end == 1_800_007_200 && info.timers == timers && dict["RunAtLoad"] as? Bool == true
             case .dailyTask: jobsOK = jobsOK && info.time == ClockTime(hour: 23, minute: 5) && args[2].contains("mode=task")
             case .dailyNormal: jobsOK = jobsOK && info.time == ClockTime(hour: 7, minute: 30) && info.timers == timers && args[2].contains(Schedule.Job.taskEnd.path)
+            case .bootRestore: jobsOK = jobsOK && dict["StartCalendarInterval"] == nil && dict["RunAtLoad"] as? Bool == true && args[2].contains("mode=task")
             }
         }
         let revisionsOK = Schedule.Job.allCases.allSatisfy { job in

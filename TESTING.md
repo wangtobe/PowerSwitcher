@@ -1,3 +1,23 @@
+# Validation — 1.6.2 (2026-10-10)
+
+## What happened on the reporting Mac (read-only)
+
+- 2026-10-10 08:00:04: daily Task job ran, exit 0. The 20:30 daily Daily job had been registered at 21:37 the evening before, after its time, so it had not run yet.
+- The user restarted manually at 10:04 (a shutdown-stall report, no panic). Afterwards `SleepDisabled` was 0 while AC sleep stayed 0 and battery sleep 1: Task mode had been cleared by the restart.
+
+## Results
+
+- Mock tests 15/15. Universal build without errors or warnings. Self-tests **25/25** native and under Rosetta, including restart detection and the boot-restore plist (no calendar, RunAtLoad, Task script).
+- Schedule sandbox **17/17**, with `sysctl` mocked for the boot time: boot-restore restores Task mode when a restart cleared it; leaves Daily timers, an hour-old boot, and an active Task mode alone. The sandbox caught a greedy `sed` that read `usec` instead of `sec` from `kern.boottime` (it would never have restored); fixed and checked against the real `sysctl` output.
+- Registering Task mode plus boot-restore through `osascript … do shell script` in the sandbox: exit 0, plists pass `plutil -lint`, and after a simulated restart the job restored Task mode.
+- Settings rendered offscreen in Chinese and English; it read the user's real registered schedule (08:00 / 20:30).
+
+## Not performed
+
+- No real restart with the option on, no administrator prompt, no job registered on the real system by the assistant.
+
+---
+
 # Validation — 1.6.1 (2026-10-09)
 
 1.6.1 = the 1.6.0 test build plus the "Custom Time…" picker. Results below were rerun on 1.6.1 unless noted.
