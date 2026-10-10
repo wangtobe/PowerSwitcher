@@ -9,6 +9,7 @@ struct ClockTime: Equatable {
     static let dailyDefault = ClockTime(hour: 8, minute: 0)
 
     var text: String { String(format: "%02d:%02d", hour, minute) }
+    var minutes: Int { hour * 60 + minute }
 }
 
 /// Scheduled switches run unattended as launchd system jobs, so nobody has to type a password when they fire.
@@ -28,6 +29,36 @@ enum Schedule {
         var restoreAfterRestart = false
 
         var isEmpty: Bool { taskEnd == nil && dailyTask == nil && dailyNormal == nil && !restoreAfterRestart }
+
+        /// With both daily times set, the day splits into a Task window and a Daily window.
+        var window: Window? {
+            guard let task = dailyTask, let normal = dailyNormal, task != normal else { return nil }
+            return Window(task: task, normal: normal)
+        }
+    }
+
+    struct Window: Equatable {
+        var task: ClockTime
+        var normal: ClockTime
+
+        /// Whether `date` falls in the Task window; windows may wrap past midnight (23:00–08:00).
+        func isTask(at date: Date, calendar: Calendar = .current) -> Bool {
+            let c = calendar.dateComponents([.hour, .minute], from: date)
+            let m = (c.hour ?? 0) * 60 + (c.minute ?? 0), t = task.minutes, n = normal.minutes
+            return t < n ? (m >= t && m < n) : (m >= t || m < n)
+        }
+
+        func mode(at date: Date = Date()) -> PowerMode { isTask(at: date) ? .task : .normal }
+
+        /// The same test in sh, setting nothing; `in_task` succeeds inside the Task window.
+        var shell: String {
+            let t = task.minutes, n = normal.minutes
+            let test = t < n ? "[ \"$m\" -ge \(t) ] && [ \"$m\" -lt \(n) ]" : "[ \"$m\" -ge \(t) ] || [ \"$m\" -lt \(n) ]"
+            return """
+            m=$(/bin/date '+%H %M' | /usr/bin/awk '{print $1 * 60 + $2}')
+            in_task() { \(test); }
+            """
+        }
     }
 
     enum Job: String, CaseIterable {
@@ -42,9 +73,9 @@ enum Schedule {
     static let log = "/Library/Logs/PowerSwitcher-schedule.log"
     static let failureMarker = "PowerSwitcher schedule update failed"
     private static let endKey = "POWERSWITCHER_END", acKey = "POWERSWITCHER_DAILY_AC", batteryKey = "POWERSWITCHER_DAILY_BATTERY",
-                       revisionKey = "POWERSWITCHER_REVISION"
+                       revisionKey = "POWERSWITCHER_REVISION", restoreKey = "POWERSWITCHER_RESTORE"
     /// Bump when the job script layout changes.
-    private static let format = "2"
+    private static let format = "3"
 
     /// Identifies the switching script baked into registered jobs, so jobs from an older build can be re-registered.
     static let revision: String = {
@@ -76,7 +107,8 @@ enum Schedule {
             case .dailyNormal:
                 result.plan.dailyNormal = info.time
             case .bootRestore:
-                result.plan.restoreAfterRestart = true
+                // The startup job also exists for a daily window; absent flag = registered by 1.6.2 build 14, restore only.
+                result.plan.restoreAfterRestart = info.restore ?? true
             }
             if job == .taskEnd || job == .dailyNormal, let timers = info.timers { result.timers = timers }
             if info.revision != revision { result.isStale = true }
@@ -89,6 +121,7 @@ enum Schedule {
         var end: Int?
         var timers: DailyTimers?
         var revision: String?
+        var restore: Bool?
     }
 
     static func parse(_ data: Data) -> JobInfo? {
@@ -100,6 +133,7 @@ enum Schedule {
         let env = plist["EnvironmentVariables"] as? [String: String] ?? [:]
         info.end = env[endKey].flatMap { Int($0) }
         info.revision = env[revisionKey]
+        info.restore = env[restoreKey].map { $0 == "1" }
         if let ac = env[acKey].flatMap({ Int($0) }), let battery = env[batteryKey].flatMap({ Int($0) }) {
             info.timers = DailyTimers(ac: ac, battery: battery)
         }
@@ -181,36 +215,81 @@ enum Schedule {
         case .dailyTask:
             guard let time = plan.dailyTask else { return nil }
             interval = ["Hour": time.hour, "Minute": time.minute]
-            script = body("daily-task", .task, timers: t) + "\nexit $rc"
+            if let window = plan.window {
+                // Acts only inside the Task window, so a fire that launchd delivers late (after sleep) can't undo a later switch.
+                script = """
+                \(window.shell)
+                in_task || exit 0
+                [ "$(\(sleepDisabled))" = 0 ] || exit 0
+                \(body("daily-task", .task, timers: t))
+                exit $rc
+                """
+            } else {
+                script = body("daily-task", .task, timers: t) + "\nexit $rc"
+            }
         case .dailyNormal:
             guard let time = plan.dailyNormal else { return nil }
             interval = ["Hour": time.hour, "Minute": time.minute]
             // Daily mode is in effect afterwards, so a pending one-shot end has nothing left to do.
-            script = """
-            \(body("daily-normal", .normal, timers: t))
+            let clearEnd = """
             /bin/launchctl bootout system/\(Job.taskEnd.rawValue) </dev/null >/dev/null 2>&1
             /bin/rm -f \(Job.taskEnd.path)
-            exit $rc
             """
+            if let window = plan.window {
+                script = """
+                \(window.shell)
+                in_task && exit 0
+                [ "$(\(sleepDisabled))" = 1 ] || \(taskTimersLeft) || exit 0
+                \(body("daily-normal", .normal, timers: t))
+                \(clearEnd)
+                exit $rc
+                """
+            } else {
+                script = """
+                \(body("daily-normal", .normal, timers: t))
+                \(clearEnd)
+                exit $rc
+                """
+            }
         case .bootRestore:
-            guard plan.restoreAfterRestart else { return nil }
+            let window = plan.window
+            guard plan.restoreAfterRestart || window != nil else { return nil }
+            env[restoreKey] = plan.restoreAfterRestart ? "1" : "0"
             // A restart clears the global SleepDisabled flag but keeps Task mode's idle timers, so a profile left at
             // "never" (0, which Daily mode never sets) with sleep allowed means Task mode was interrupted.
-            // Runs at load only and acts only shortly after startup, not when the option is turned on.
+            // With a daily window, startup follows the window instead (a switch may have been missed while off).
+            // Runs at load only and acts only shortly after startup, not when registered.
             runAtLoad = true
+            let decide: String
+            if let window {
+                decide = """
+                \(window.shell)
+                if in_task; then
+                \(body("startup (daily window)", .task, timers: t))
+                else
+                \(taskTimersLeft) || exit 0
+                \(body("startup (daily window)", .normal, timers: t))
+                fi
+                """
+            } else {
+                decide = """
+                \(taskTimersLeft) || exit 0
+                \(body("boot-restore", .task, timers: t))
+                """
+            }
             script = """
             now=$(/bin/date +%s)
             boot=$(/usr/sbin/sysctl -n kern.boottime | /usr/bin/sed -E 's/^\\{ sec = ([0-9]+),.*$/\\1/')
             [ $((now - boot)) -lt 900 ] || exit 0
             n=0
             until /usr/bin/pmset -g >/dev/null 2>&1; do n=$((n + 1)); [ "$n" -lt 60 ] || exit 1; /bin/sleep 1; done
-            [ "$(/usr/bin/pmset -g | /usr/bin/awk '$1=="SleepDisabled" {print $2; f=1} END {if (!f) print 0}')" = 0 ] || exit 0
-            /usr/bin/pmset -g custom | /usr/bin/awk '/^[^ \t].*:$/ {a=($0=="AC Power:" || $0=="UPS Power:")} a && $1=="sleep" && $2=="0" {f=1} END {exit !f}' || exit 0
-            \(body("boot-restore", .task, timers: t))
+            [ "$(\(sleepDisabled))" = 0 ] || exit 0
+            \(decide)
             exit $rc
             """
         }
-        if job == .dailyTask || job == .bootRestore { env = [:] }
+        if job == .dailyTask { env = [:] }
+        if job == .bootRestore { env.removeValue(forKey: acKey); env.removeValue(forKey: batteryKey) }
         env[revisionKey] = revision
         var dict: [String: Any] = [
             "Label": job.rawValue,
@@ -225,6 +304,11 @@ enum Schedule {
         guard let data = try? PropertyListSerialization.data(fromPropertyList: dict, format: .xml, options: 0) else { return nil }
         return String(data: data, encoding: .utf8)
     }
+
+    /// Prints the live global SleepDisabled value (0 when absent).
+    private static let sleepDisabled = "/usr/bin/pmset -g | /usr/bin/awk '$1==\"SleepDisabled\" {print $2; f=1} END {if (!f) print 0}'"
+    /// Succeeds when a power-adapter profile is still at Task mode's "never" (0), which Daily mode never sets.
+    private static let taskTimersLeft = "/usr/bin/pmset -g custom | /usr/bin/awk '/^[^ \\t].*:$/ {a=($0==\"AC Power:\" || $0==\"UPS Power:\")} a && $1==\"sleep\" && $2==\"0\" {f=1} END {exit !f}'"
 
     /// Runs the regular switching script in a subshell and logs the result; leaves its exit status in `rc`.
     private static func body(_ name: String, _ mode: PowerMode, timers: DailyTimers) -> String {

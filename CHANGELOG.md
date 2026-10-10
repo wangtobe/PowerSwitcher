@@ -4,7 +4,8 @@
 
 - A restart clears macOS's global SleepDisabled flag but keeps Task mode's idle timers (power adapter "never", battery 1 min), leaving the Mac half in Task mode. The app now recognizes this (sleep allowed while an AC/UPS profile is at 0, which Daily mode never sets, after Task mode was last seen), shows a notice once per launch, a warning icon and status card, and offers "Restore Task Mode…" and "Switch to Daily Mode…".
 - New opt-in "Keep the same mode after a restart" under Scheduled Switches in Settings. It registers `org.powerswitcher.schedule.boot-restore`, a launchd job that runs at load, waits for powerd, acts only within 15 minutes of startup and only in that interrupted state, and re-applies Task mode through the regular switching script.
-- Uninstall command and docs cover the new job. Self-tests 25 (restart detection, boot-restore plist). Power switching, authorization, verification and rollback logic are unchanged.
+- A daily schedule with both times now works as a window. Saving a new or changed window switches to the mode for the current time under the same prompt; the daily jobs act only when the current time is in their window (so late fires after sleep, in any order, end in the right mode); the startup job follows the window at boot, ahead of the restore option. Single-time schedules behave as before. Job format bumped, so jobs from 1.6.1 are flagged for update.
+- Uninstall command and docs cover the new job. Self-tests 27 (restart detection, boot-restore plist, daily window). Power switching, authorization, verification and rollback logic are unchanged.
 
 ## 1.6.1 — 2026-10-09
 

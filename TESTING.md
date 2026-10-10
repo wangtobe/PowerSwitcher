@@ -12,6 +12,13 @@
 - Registering Task mode plus boot-restore through `osascript … do shell script` in the sandbox: exit 0, plists pass `plutil -lint`, and after a simulated restart the job restored Task mode.
 - Settings rendered offscreen in Chinese and English; it read the user's real registered schedule (08:00 / 20:30).
 
+## Daily window (build 15)
+
+- Reported by the user: setting 09:00–21:00 at 14:00 left Daily mode until 21:00.
+- Self-tests **27/27** (window inside/outside, past midnight; startup job registered for a window without the restore option).
+- Schedule sandbox **27/27** with `date` mocked: Task job acts only inside the window, Daily job only outside; both late fires at 10:00 or 23:30 end in the right mode in either order; startup at 14:00 → Task, at 22:00 with Task timers left → Daily, at 22:00 already Daily → nothing.
+- Through `osascript … do shell script` in the sandbox: registering a 09:00–21:00 window with Task mode, then startup at 22:00 → Daily (10 min timers), Daily job at 22:00 and Task job at 14:00 behave as above; plists pass `plutil -lint`.
+
 ## Not performed
 
 - No real restart with the option on, no administrator prompt, no job registered on the real system by the assistant.

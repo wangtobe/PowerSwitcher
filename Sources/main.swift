@@ -627,6 +627,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         readSnapshot { s in
             self.snapshot = s
             self.render()
+            // A new or changed daily window takes effect now, not at its next boundary: switch with the same prompt.
+            if let window = plan.window, window != self.schedule.plan.window {
+                let expected = window.mode()
+                if s.mode != expected || self.taskInterrupted {
+                    if expected == .normal { plan.taskEnd = nil }
+                    self.switchTo(expected, plan: plan, quiet: true) { ok in
+                        guard ok else { return }
+                        self.feedback.show(expected.symbols, tint: self.tint(expected, s), title: L("已按每天定时切到", "Switched by the daily schedule to ") + expected.title,
+                                           detail: L("\(window.task.text)–\(window.normal.text) 是任务模式，其余时间是日常模式。", "Task mode \(window.task.text)–\(window.normal.text), Daily mode the rest of the day."),
+                                           from: self.statusItem.button)
+                    }
+                    return
+                }
+            }
             let timersPending = s.mode == .normal && !s.matches(Preferences.timers)
             if timersPending {
                 let (response, _) = UI.alert(L("现在应用新的休眠时间？", "Apply the new sleep timers now?"), L("当前处于日常模式，系统仍在使用原来的休眠时间。应用新设定需要管理员密码。", "Daily mode is active but the system still uses the old timers. Applying new timers requires an administrator password."),

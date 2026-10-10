@@ -87,6 +87,17 @@ enum SelfTest {
         }
         check(jobsOK && revisionsOK, "scheduled job plists parse, round-trip and pass sh -n")
         check(Schedule.plist(.taskEnd, plan: Schedule.Plan(), timers: timers) == nil, "unused scheduled job omitted")
+        let cal = Calendar.current
+        func at(_ h: Int, _ m: Int) -> Date { cal.date(bySettingHour: h, minute: m, second: 0, of: Date())! }
+        let day = Schedule.Window(task: ClockTime(hour: 9, minute: 0), normal: ClockTime(hour: 21, minute: 0))
+        let night = Schedule.Window(task: ClockTime(hour: 23, minute: 0), normal: ClockTime(hour: 8, minute: 0))
+        check(day.isTask(at: at(14, 0)) && day.isTask(at: at(9, 0)) && !day.isTask(at: at(21, 0)) && !day.isTask(at: at(8, 59))
+              && night.isTask(at: at(2, 0)) && night.isTask(at: at(23, 0)) && !night.isTask(at: at(12, 0)) && !night.isTask(at: at(8, 0)),
+              "daily window, including one past midnight")
+        let windowOnly = Schedule.Plan(dailyTask: day.task, dailyNormal: day.normal)
+        let startup = Schedule.plist(.bootRestore, plan: windowOnly, timers: timers).flatMap { Schedule.parse(Data($0.utf8)) }
+        check(startup?.restore == false && Schedule.plist(.bootRestore, plan: Schedule.Plan(dailyNormal: day.normal), timers: timers) == nil,
+              "startup job follows a daily window without the restore option")
         let sync = Schedule.syncScript(Schedule.Plan(dailyNormal: ClockTime(hour: 8, minute: 0)), timers: timers)
         check(run("/bin/sh", ["-n", "-c", sync]).0 == 0 && sync.contains("remove_job " + Schedule.Job.taskEnd.rawValue)
               && sync.contains("install_job " + Schedule.Job.dailyNormal.rawValue), "schedule sync script")

@@ -33,6 +33,20 @@
 
 设置和已登记的定时都会保留。
 
+### 每天定时改成按时间段生效
+
+以前「每天定时」只在两个时间点各切一次。比如下午 14:00 设好「9:00 进入任务模式、21:00 切回日常模式」，要等到 21:00 才会第一次动作，9 到 21 点这段反而不是任务模式。睡眠或关机跨过了切换时间，也可能停在错误的模式。
+
+现在两项都开时，两个时间之间就是任务模式，其余时间是日常模式：
+
+- **保存设置时**：如果当前时间落在另一种模式的时间段，会在同一次密码授权里直接切过去，并提示「已按每天定时切到…」。
+- **唤醒后**：错过的定时补跑时，先看当前时间属于哪一段，所以不管补跑顺序如何，都会停在正确的模式。
+- **开机后**：按当前时间段切到对应模式。这条优先于「重启后恢复重启前的模式」。
+- 时间段可以跨午夜，比如 23:00 进入任务模式、08:00 切回日常模式。
+- 只开其中一项时，行为和以前一样，到点切换一次。
+
+升级后，菜单会提示定时任务是旧版本登记的，点「更新定时任务…」输一次密码就行。
+
 ### 要知道的
 
 - 如果你已经删掉应用，清理定时任务的命令里要多加一个 `boot-restore`，见 README 的「删除应用前先关掉定时」。
@@ -68,6 +82,20 @@ PowerSwitcher used to just show Daily mode with timers that didn't match your se
 3. Drag the new `PowerSwitcher.app` into Applications to replace the old one, then open it.
 
 Your settings and registered schedules are kept.
+
+### Daily schedules now work as a window
+
+A daily schedule used to switch only at its two times. Set "Task mode at 09:00, Daily mode at 21:00" at 14:00, and nothing happened until 21:00, so 09:00–21:00 wasn't Task mode that day. Sleeping or shutting down across a switch time could also leave the wrong mode.
+
+With both times on, Task mode now runs between them and Daily mode the rest of the day:
+
+- **When you save**: if the current time belongs to the other mode, PowerSwitcher switches under the same password prompt and says "Switched by the daily schedule to …".
+- **After waking**: late fires check which window the current time is in, so they end in the right mode whatever order they run in.
+- **After startup**: the Mac switches to the mode for the current time. This takes priority over "Keep the same mode after a restart".
+- Windows can wrap past midnight, e.g. Task mode at 23:00, Daily mode at 08:00.
+- With only one of the two times on, it switches once at that time, as before.
+
+After updating, the menu says scheduled switches were set up by an older version; choose "Update Scheduled Switches…" and enter your password once.
 
 ### Good to know
 

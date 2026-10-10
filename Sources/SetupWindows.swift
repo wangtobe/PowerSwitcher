@@ -61,8 +61,8 @@ final class PreferencesForm: NSObject {
         grid.rowSpacing = 8
         grid.columnSpacing = 8
         grid.rowAlignment = .firstBaseline
-        let note = UI.paragraph(L("到点自动切换，不用输入密码；保存时需要输入一次管理员密码。Mac 在睡眠时错过的定时，会在唤醒后执行。",
-                                  "Switches happen automatically with no password. Saving asks for your administrator password once. A time missed while your Mac sleeps runs when it wakes."),
+        let note = UI.paragraph(L("到点自动切换，不用输入密码；保存时需要输入一次管理员密码。两项都开时，两个时间之间是任务模式、其余是日常模式：保存时、唤醒后和开机后都会按当前时间切到对应的模式。",
+                                  "Switches happen automatically with no password; saving asks for your administrator password once. With both on, Task mode runs between the two times and Daily mode the rest of the day: saving, waking and starting up all switch to the mode for the current time."),
                                 width: width, size: 11)
         let restoreNote = UI.paragraph(L("日常模式重启后本来就会保持；任务模式会被系统取消。开启后，重启前在任务模式的话，开机后会自动恢复，不用输入密码。",
                                          "Daily mode survives a restart on its own, but a restart turns Task mode off. With this on, Task mode comes back after startup if it was on before, with no password."),
