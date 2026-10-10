@@ -107,7 +107,7 @@ for j in task-end daily-task daily-normal boot-restore; do sudo launchctl bootou
 - 定时切换目前只在一台 M1 Pro MacBook（macOS 15）上实测过。
 - 合盖关屏和合盖期间保持黑屏目前只在一台 M1 Pro MacBook（macOS 15）上实测过。保持黑屏用的是 macOS 未公开的亮度接口，以后的系统更新可能让它失效。
 
-自动化测试：15 项模拟测试全部通过，arm64 和 x86_64 各 25 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
+自动化测试：15 项模拟测试全部通过，arm64 和 x86_64 各 27 项自检全部通过。详细记录在源码包的 `TESTING.md` 里。
 
 ### 开源与反馈
 
@@ -239,7 +239,7 @@ for j in task-end daily-task daily-normal boot-restore; do sudo launchctl bootou
 - Scheduled switches have only been tested hands-on on one M1 Pro MacBook running macOS 15.
 - Turning the display off and keeping it dark on lid close have only been tested hands-on on one M1 Pro MacBook running macOS 15. Keeping it dark relies on a private macOS brightness API, which a future macOS update could break.
 
-Automated tests: all 15 mock tests pass, and all 25 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
+Automated tests: all 15 mock tests pass, and all 27 self-tests pass on both arm64 and x86_64. Details are in `TESTING.md` in the source package.
 
 ### Open source
 
